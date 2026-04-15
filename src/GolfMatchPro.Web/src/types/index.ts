@@ -1,0 +1,232 @@
+export interface CourseHoleDto {
+  courseHoleId: number;
+  holeNumber: number;
+  par: number;
+  handicapRanking: number;
+}
+
+export interface CourseDto {
+  courseId: number;
+  name: string;
+  teeColor: string | null;
+  yearOfInfo: number | null;
+  courseRating: number;
+  slopeRating: number;
+  par: number;
+  holes: CourseHoleDto[];
+}
+
+export interface CreateCourseHoleRequest {
+  holeNumber: number;
+  par: number;
+  handicapRanking: number;
+}
+
+export interface CreateCourseRequest {
+  name: string;
+  teeColor: string | null;
+  yearOfInfo: number | null;
+  courseRating: number;
+  slopeRating: number;
+  holes: CreateCourseHoleRequest[];
+}
+
+export interface PlayerDto {
+  playerId: number;
+  fullName: string;
+  nickname: string | null;
+  handicapIndex: number;
+  isActive: boolean;
+  isGuest: boolean;
+}
+
+export interface CreatePlayerRequest {
+  fullName: string;
+  nickname: string | null;
+  handicapIndex: number;
+  isGuest: boolean;
+}
+
+export interface UpdatePlayerRequest {
+  fullName: string;
+  nickname: string | null;
+  handicapIndex: number;
+  isActive: boolean;
+  isGuest: boolean;
+}
+
+// Match types
+export type MatchStatus = 'Setup' | 'InProgress' | 'Completed';
+
+export interface MatchDto {
+  matchId: number;
+  courseId: number;
+  courseName: string;
+  matchDate: string;
+  status: MatchStatus;
+  createdByPlayerId: number;
+  playerCount: number;
+}
+
+export interface MatchDetailDto {
+  matchId: number;
+  course: CourseDto;
+  matchDate: string;
+  status: MatchStatus;
+  createdByPlayerId: number;
+  scores: MatchScoreDto[];
+}
+
+export interface MatchScoreDto {
+  matchScoreId: number;
+  playerId: number;
+  playerName: string;
+  playerNickname: string | null;
+  courseHandicap: number;
+  holeScores: number[];
+  grossTotal: number;
+  netTotal: number;
+  reportableScore: number;
+  isComplete: boolean;
+}
+
+export interface CreateMatchRequest {
+  courseId: number;
+  matchDate: string;
+  createdByPlayerId: number;
+  playerIds: number[];
+}
+
+export interface HoleScoreResultDto {
+  playerId: number;
+  holeNumber: number;
+  score: number;
+  grossTotal: number;
+  netTotal: number;
+  frontNine: number;
+  backNine: number;
+  holesCompleted: number;
+  isComplete: boolean;
+}
+
+// Bet types
+export type BetType = 'Foursome' | 'Threesome' | 'Fivesome' | 'BestBall' | 'Individual' | 'Skins' | 'IndoTournament' | 'RoundRobin';
+export type CompetitionType = 'MatchPlay' | 'MedalPlay';
+export type TeamPosition = 'Captain' | 'B' | 'C' | 'D' | 'E';
+
+export interface BetConfigurationDto {
+  betConfigId: number;
+  matchId: number;
+  betType: BetType;
+  competitionType: CompetitionType;
+  handicapPercentage: number;
+  nassauFront: number;
+  nassauBack: number;
+  nassau18: number;
+  totalStrokesBetPerStroke: number | null;
+  maxNetScore: number | null;
+  investmentOffEnabled: boolean;
+  investmentOffAmount: number;
+  redemptionEnabled: boolean;
+  redemptionAmount: number;
+  dunnEnabled: boolean;
+  dunnAmount: number;
+  autoPressEnabled: boolean;
+  pressAmount: number;
+  pressDownThreshold: number;
+  skinsBuyIn: number | null;
+  skinsPerSkinAmount: number | null;
+  expenseDeductionPct: number;
+  scoresCountingPerHole: number;
+  configJson: string | null;
+  teams: TeamDto[];
+}
+
+export interface CreateBetConfigurationRequest {
+  betType: BetType;
+  competitionType: CompetitionType;
+  handicapPercentage: number;
+  nassauFront: number;
+  nassauBack: number;
+  nassau18: number;
+  totalStrokesBetPerStroke: number | null;
+  maxNetScore: number | null;
+  investmentOffEnabled: boolean;
+  investmentOffAmount: number;
+  redemptionEnabled: boolean;
+  redemptionAmount: number;
+  dunnEnabled: boolean;
+  dunnAmount: number;
+  autoPressEnabled: boolean;
+  pressAmount: number;
+  pressDownThreshold: number;
+  skinsBuyIn: number | null;
+  skinsPerSkinAmount: number | null;
+  expenseDeductionPct: number;
+  scoresCountingPerHole: number;
+  configJson: string | null;
+}
+
+export interface TeamDto {
+  teamId: number;
+  teamNumber: number;
+  teamName: string | null;
+  players: TeamPlayerDto[];
+}
+
+export interface TeamPlayerDto {
+  teamPlayerId: number;
+  playerId: number;
+  playerName: string;
+  position: TeamPosition;
+}
+
+export interface CreateTeamRequest {
+  teamNumber: number;
+  teamName: string | null;
+  players: { playerId: number; position: TeamPosition }[];
+}
+
+// Results types
+export interface TeamBetResultsDto {
+  teamResults: TeamResultDto[];
+  matchups: TeamVsTeamResultDto[];
+  playerResults: PlayerResultDto[];
+}
+
+export interface TeamResultDto {
+  teamNumber: number;
+  teamName: string | null;
+  teamHoleScores: number[];
+  isOff: boolean[];
+  isRedemption: boolean[];
+  totalOffs: number;
+  totalRedemptions: number;
+  investmentAmount: number;
+  nassauTotal: number;
+  totalStrokesTotal: number;
+  grandTotal: number;
+  grandTotalAfterExpense: number;
+  teamNetTotal: number;
+}
+
+export interface TeamVsTeamResultDto {
+  teamANumber: number;
+  teamBNumber: number;
+  nassauFrontDollars: number;
+  nassauBackDollars: number;
+  nassau18Dollars: number;
+  totalStrokesDollars: number;
+  holeByHoleStatus: number[];
+  front9Result: number;
+  back9Result: number;
+  overall18Result: number;
+}
+
+export interface PlayerResultDto {
+  playerId: number;
+  playerName: string;
+  teamNumber: number;
+  winLoss: number;
+  winLossAfterExpense: number;
+}

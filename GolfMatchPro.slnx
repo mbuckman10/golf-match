@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GolfMatchPro.Api/GolfMatchPro.Api.csproj" />
+    <Project Path="src/GolfMatchPro.Data/GolfMatchPro.Data.csproj" />
+    <Project Path="src/GolfMatchPro.Engine/GolfMatchPro.Engine.csproj" />
+    <Project Path="src/GolfMatchPro.Shared/GolfMatchPro.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GolfMatchPro.Api.Tests/GolfMatchPro.Api.Tests.csproj" />
+    <Project Path="tests/GolfMatchPro.Engine.Tests/GolfMatchPro.Engine.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/GolfMatchPro.Migration/GolfMatchPro.Migration.csproj" />
+  </Folder>
+</Solution>

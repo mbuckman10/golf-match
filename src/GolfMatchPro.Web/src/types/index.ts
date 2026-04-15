@@ -230,3 +230,89 @@ export interface PlayerResultDto {
   winLoss: number;
   winLossAfterExpense: number;
 }
+
+// Individual bet result types
+export interface PressResultDto {
+  startHole: number;
+  endHole: number;
+  result: number;
+  amount: number;
+}
+
+export interface IndividualMatchupResultDto {
+  playerAId: number;
+  playerAName: string;
+  playerBId: number;
+  playerBName: string;
+  holeByHoleStatus: number[];
+  front9Result: number;
+  back9Result: number;
+  overall18Result: number;
+  nassauFrontDollars: number;
+  nassauBackDollars: number;
+  nassau18Dollars: number;
+  presses: PressResultDto[];
+  totalPressAmount: number;
+  totalAmountPlayerA: number;
+}
+
+export interface IndividualPlayerResultDto {
+  playerId: number;
+  playerName: string;
+  winLoss: number;
+  winLossAfterExpense: number;
+}
+
+export interface IndividualBetResultsDto {
+  matchups: IndividualMatchupResultDto[];
+  playerResults: IndividualPlayerResultDto[];
+}
+
+// Best Ball result types
+export interface BestBallMatchupResultDto {
+  sheetHangerTeamNumber: number;
+  sheetHangerTeamName: string | null;
+  opponentTeamNumber: number;
+  opponentTeamName: string | null;
+  sheetHangerBestBall: number[];
+  opponentBestBall: number[];
+  holeByHoleStatus: number[];
+  front9Result: number;
+  back9Result: number;
+  overall18Result: number;
+  nassauFrontDollars: number;
+  nassauBackDollars: number;
+  nassau18Dollars: number;
+  presses: PressResultDto[];
+  totalPressAmount: number;
+  totalAmountSheetHanger: number;
+}
+
+export interface BestBallPlayerResultDto {
+  playerId: number;
+  playerName: string;
+  teamNumber: number;
+  winLoss: number;
+  winLossAfterExpense: number;
+}
+
+export interface BestBallResultsDto {
+  matchups: BestBallMatchupResultDto[];
+  playerResults: BestBallPlayerResultDto[];
+}
+
+// Best Ball W-L summary
+export interface BestBallPlayerSummaryDto {
+  playerId: number;
+  playerName: string;
+  totalWinLoss: number;
+  totalWinLossAfterExpense: number;
+  matchupsPlayed: number;
+  matchupsWon: number;
+  matchupsLost: number;
+  matchupsTied: number;
+}
+
+export interface BestBallWinLossSummaryDto {
+  playerSummaries: BestBallPlayerSummaryDto[];
+}

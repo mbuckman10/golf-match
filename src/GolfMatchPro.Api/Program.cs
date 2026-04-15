@@ -1,6 +1,8 @@
 using GolfMatchPro.Api.Hubs;
 using GolfMatchPro.Data;
+using GolfMatchPro.Engine.BestBall;
 using GolfMatchPro.Engine.Handicaps;
+using GolfMatchPro.Engine.Individual;
 using GolfMatchPro.Engine.Nassau;
 using GolfMatchPro.Engine.Teams;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +25,8 @@ builder.Services.AddControllers()
 builder.Services.AddSingleton<IHandicapCalculator, HandicapCalculator>();
 builder.Services.AddSingleton<INassauCalculator, NassauCalculator>();
 builder.Services.AddSingleton<ITeamBetCalculator, TeamBetCalculator>();
+builder.Services.AddSingleton<IIndividualBetCalculator, IndividualBetCalculator>();
+builder.Services.AddSingleton<IBestBallCalculator, BestBallCalculator>();
 
 // SignalR
 builder.Services.AddSignalR();

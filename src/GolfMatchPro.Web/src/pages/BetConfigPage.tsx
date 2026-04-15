@@ -349,7 +349,12 @@ export function BetConfigPage() {
                     <Button
                       size="small"
                       appearance="primary"
-                      onClick={() => navigate(`/matches/${matchId}/bets/${bet.betConfigId}/results`)}
+                      onClick={() => {
+                        const base = `/matches/${matchId}/bets/${bet.betConfigId}`;
+                        if (bet.betType === 'Individual') navigate(`${base}/individual-results`);
+                        else if (bet.betType === 'BestBall') navigate(`${base}/bestball-results`);
+                        else navigate(`${base}/results`);
+                      }}
                     >
                       Results
                     </Button>
@@ -362,9 +367,16 @@ export function BetConfigPage() {
         </div>
       )}
 
-      <Button appearance="primary" icon={<Add24Regular />} onClick={handleNewBet} style={{ marginBottom: tokens.spacingVerticalM }}>
-        New Bet
-      </Button>
+      <div style={{ display: 'flex', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalM }}>
+        <Button appearance="primary" icon={<Add24Regular />} onClick={handleNewBet}>
+          New Bet
+        </Button>
+        {bets.some((b) => b.betType === 'BestBall') && (
+          <Button appearance="secondary" onClick={() => navigate(`/matches/${matchId}/bestball-summary`)}>
+            BB W/L Summary
+          </Button>
+        )}
+      </div>
 
       {showForm && (
         <Card style={{ padding: tokens.spacingVerticalL }}>

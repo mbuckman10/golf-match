@@ -12,6 +12,9 @@ import { MatchDetailPage } from './pages/MatchDetailPage';
 import { ScorecardPage } from './pages/ScorecardPage';
 import { BetConfigPage } from './pages/BetConfigPage';
 import { BetResultsPage } from './pages/BetResultsPage';
+import { IndividualResultsPage } from './pages/IndividualResultsPage';
+import { BestBallResultsPage } from './pages/BestBallResultsPage';
+import { BestBallSummaryPage } from './pages/BestBallSummaryPage';
 
 function App() {
   return (
@@ -32,6 +35,9 @@ function App() {
             <Route path="/matches/:id/scorecard" element={<ScorecardPage />} />
             <Route path="/matches/:id/bets" element={<BetConfigPage />} />
             <Route path="/matches/:id/bets/:betConfigId/results" element={<BetResultsPage />} />
+            <Route path="/matches/:id/bets/:betConfigId/individual-results" element={<IndividualResultsPage />} />
+            <Route path="/matches/:id/bets/:betConfigId/bestball-results" element={<BestBallResultsPage />} />
+            <Route path="/matches/:id/bestball-summary" element={<BestBallSummaryPage />} />
           </Routes>
         </AppShell>
       </BrowserRouter>

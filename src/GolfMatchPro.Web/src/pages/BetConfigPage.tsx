@@ -29,9 +29,10 @@ import type {
   CompetitionType,
   TeamPosition,
   CreateTeamRequest,
+  TournamentConfigJsonDto,
 } from '../types';
 
-const BET_TYPES: BetType[] = ['Foursome', 'Threesome', 'Fivesome'];
+const BET_TYPES: BetType[] = ['Foursome', 'Threesome', 'Fivesome', 'BestBall', 'Individual', 'Skins', 'IndoTournament'];
 const COMPETITION_TYPES: CompetitionType[] = ['MatchPlay', 'MedalPlay'];
 const TEAM_POSITIONS: TeamPosition[] = ['Captain', 'B', 'C', 'D', 'E'];
 
@@ -96,6 +97,22 @@ export function BetConfigPage() {
     configJson: null,
   });
 
+  const [skinsUseNetScores, setSkinsUseNetScores] = useState(true);
+  const [tournamentConfig, setTournamentConfig] = useState<TournamentConfigJsonDto>({
+    sponsorMoney: 0,
+    buyInPerPlayer: 20,
+    grossPursePercent: 50,
+    netPursePercent: 50,
+    eighteenHolePercent: 60,
+    frontNinePercent: 20,
+    backNinePercent: 20,
+    placePayouts: [
+      { place: 1, percent: 50 },
+      { place: 2, percent: 30 },
+      { place: 3, percent: 20 },
+    ],
+  });
+
   // Team assignment state
   const [teamAssignments, setTeamAssignments] = useState<
     { teamNumber: number; teamName: string; players: { playerId: number; position: TeamPosition }[] }[]
@@ -146,30 +163,45 @@ export function BetConfigPage() {
     setTeamAssignments(teams);
   };
 
+  const requiresTeams = (betType: BetType) =>
+    betType !== 'Skins' && betType !== 'IndoTournament';
+
   const handleSaveBet = async () => {
     setSaving(true);
     setError(null);
     try {
+      const request: CreateBetConfigurationRequest = {
+        ...form,
+        configJson:
+          form.betType === 'Skins'
+            ? JSON.stringify({ useNetScores: skinsUseNetScores })
+            : form.betType === 'IndoTournament'
+              ? JSON.stringify(tournamentConfig)
+              : form.configJson,
+      };
+
       let bet: BetConfigurationDto;
       if (editingBetId) {
-        bet = await betService.updateBet(matchId, editingBetId, form);
+        bet = await betService.updateBet(matchId, editingBetId, request);
       } else {
-        bet = await betService.createBet(matchId, form);
+        bet = await betService.createBet(matchId, request);
       }
 
-      // Save teams
-      // First delete existing teams
-      for (const existingTeam of bet.teams) {
-        await betService.deleteTeam(matchId, bet.betConfigId, existingTeam.teamId);
-      }
-      // Create new teams
-      for (const ta of teamAssignments) {
-        const teamReq: CreateTeamRequest = {
-          teamNumber: ta.teamNumber,
-          teamName: ta.teamName,
-          players: ta.players,
-        };
-        await betService.createTeam(matchId, bet.betConfigId, teamReq);
+      if (requiresTeams(form.betType)) {
+        // Save teams
+        // First delete existing teams
+        for (const existingTeam of bet.teams) {
+          await betService.deleteTeam(matchId, bet.betConfigId, existingTeam.teamId);
+        }
+        // Create new teams
+        for (const ta of teamAssignments) {
+          const teamReq: CreateTeamRequest = {
+            teamNumber: ta.teamNumber,
+            teamName: ta.teamName,
+            players: ta.players,
+          };
+          await betService.createTeam(matchId, bet.betConfigId, teamReq);
+        }
       }
 
       setSuccess('Bet configuration saved!');
@@ -224,6 +256,50 @@ export function BetConfigPage() {
         players: t.players.map((p) => ({ playerId: p.playerId, position: p.position })),
       }))
     );
+
+    if (bet.betType === 'Skins') {
+      try {
+        const parsed = bet.configJson ? JSON.parse(bet.configJson) : null;
+        setSkinsUseNetScores(parsed?.useNetScores ?? true);
+      } catch {
+        setSkinsUseNetScores(true);
+      }
+    }
+
+    if (bet.betType === 'IndoTournament') {
+      try {
+        const parsed = bet.configJson ? JSON.parse(bet.configJson) : null;
+        setTournamentConfig({
+          sponsorMoney: parsed?.sponsorMoney ?? 0,
+          buyInPerPlayer: parsed?.buyInPerPlayer ?? 20,
+          grossPursePercent: parsed?.grossPursePercent ?? 50,
+          netPursePercent: parsed?.netPursePercent ?? 50,
+          eighteenHolePercent: parsed?.eighteenHolePercent ?? 60,
+          frontNinePercent: parsed?.frontNinePercent ?? 20,
+          backNinePercent: parsed?.backNinePercent ?? 20,
+          placePayouts: parsed?.placePayouts ?? [
+            { place: 1, percent: 50 },
+            { place: 2, percent: 30 },
+            { place: 3, percent: 20 },
+          ],
+        });
+      } catch {
+        setTournamentConfig({
+          sponsorMoney: 0,
+          buyInPerPlayer: 20,
+          grossPursePercent: 50,
+          netPursePercent: 50,
+          eighteenHolePercent: 60,
+          frontNinePercent: 20,
+          backNinePercent: 20,
+          placePayouts: [
+            { place: 1, percent: 50 },
+            { place: 2, percent: 30 },
+            { place: 3, percent: 20 },
+          ],
+        });
+      }
+    }
   };
 
   const handleNewBet = () => {
@@ -255,6 +331,21 @@ export function BetConfigPage() {
     if (match) {
       initTeams('Foursome', match.scores);
     }
+    setSkinsUseNetScores(true);
+    setTournamentConfig({
+      sponsorMoney: 0,
+      buyInPerPlayer: 20,
+      grossPursePercent: 50,
+      netPursePercent: 50,
+      eighteenHolePercent: 60,
+      frontNinePercent: 20,
+      backNinePercent: 20,
+      placePayouts: [
+        { place: 1, percent: 50 },
+        { place: 2, percent: 30 },
+        { place: 3, percent: 20 },
+      ],
+    });
   };
 
   const updateTeamPlayer = (teamIdx: number, playerIdx: number, playerId: number) => {
@@ -353,6 +444,8 @@ export function BetConfigPage() {
                         const base = `/matches/${matchId}/bets/${bet.betConfigId}`;
                         if (bet.betType === 'Individual') navigate(`${base}/individual-results`);
                         else if (bet.betType === 'BestBall') navigate(`${base}/bestball-results`);
+                        else if (bet.betType === 'Skins') navigate(`${base}/skins-results`);
+                        else if (bet.betType === 'IndoTournament') navigate(`${base}/tournament-results`);
                         else navigate(`${base}/results`);
                       }}
                     >
@@ -463,52 +556,125 @@ export function BetConfigPage() {
             </div>
           </div>
 
-          {/* Team Assignments */}
-          <Divider style={{ margin: `${tokens.spacingVerticalM} 0` }}>Teams</Divider>
-          {teamAssignments.map((team, tIdx) => (
-            <Card key={tIdx} style={{ marginBottom: tokens.spacingVerticalS, padding: tokens.spacingVerticalS }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalS }}>
-                <Input
-                  value={team.teamName}
-                  onChange={(_, d) => {
-                    setTeamAssignments((prev) => {
-                      const next = [...prev];
-                      next[tIdx] = { ...next[tIdx], teamName: d.value };
-                      return next;
-                    });
-                  }}
-                  style={{ width: 160 }}
-                />
-                <Button size="small" icon={<Delete24Regular />} onClick={() => removeTeam(tIdx)} />
-              </div>
-              {team.players.map((p, pIdx) => (
-                <div key={pIdx} style={{ display: 'flex', gap: tokens.spacingHorizontalS, marginBottom: 4, alignItems: 'center' }}>
-                  <Select
-                    value={String(p.playerId)}
-                    onChange={(_, d) => updateTeamPlayer(tIdx, pIdx, Number(d.value))}
-                    style={{ minWidth: 200 }}
-                  >
-                    <option value="0">Select player...</option>
-                    {match.scores.map((s) => (
-                      <option key={s.playerId} value={String(s.playerId)}>
-                        {s.playerName} (CH: {s.courseHandicap})
-                      </option>
-                    ))}
-                  </Select>
-                  <Badge appearance="outline" size="small">
-                    {TEAM_POSITIONS[pIdx] ?? 'E'}
-                  </Badge>
-                  <Button size="small" icon={<Delete24Regular />} onClick={() => removePlayerFromTeam(tIdx, pIdx)} />
+          {form.betType === 'Skins' && (
+            <>
+              <Divider style={{ margin: `${tokens.spacingVerticalM} 0` }}>Skins Settings</Divider>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalM }}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <Switch
+                    label="Use Net Scores"
+                    checked={skinsUseNetScores}
+                    onChange={(_, d) => setSkinsUseNetScores(!!d.checked)}
+                  />
                 </div>
+                <div>
+                  <Label>Buy-In Per Player ($)</Label>
+                  <Input
+                    type="number"
+                    value={form.skinsBuyIn == null ? '' : String(form.skinsBuyIn)}
+                    onChange={(_, d) => handleFormChange('skinsBuyIn', d.value === '' ? null : Number(d.value))}
+                  />
+                </div>
+                <div>
+                  <Label>Amount Per Skin ($)</Label>
+                  <Input
+                    type="number"
+                    value={form.skinsPerSkinAmount == null ? '' : String(form.skinsPerSkinAmount)}
+                    onChange={(_, d) => handleFormChange('skinsPerSkinAmount', d.value === '' ? null : Number(d.value))}
+                  />
+                </div>
+              </div>
+              <Body1 style={{ marginBottom: tokens.spacingVerticalM }}>
+                Use either Buy-In or Amount Per Skin. If both are provided, the API will reject the request.
+              </Body1>
+            </>
+          )}
+
+          {form.betType === 'IndoTournament' && (
+            <>
+              <Divider style={{ margin: `${tokens.spacingVerticalM} 0` }}>Tournament Settings</Divider>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalM }}>
+                <div>
+                  <Label>Sponsor Money ($)</Label>
+                  <Input
+                    type="number"
+                    value={String(tournamentConfig.sponsorMoney)}
+                    onChange={(_, d) => setTournamentConfig((prev) => ({ ...prev, sponsorMoney: Number(d.value) || 0 }))}
+                  />
+                </div>
+                <div>
+                  <Label>Buy-In Per Player ($)</Label>
+                  <Input
+                    type="number"
+                    value={String(tournamentConfig.buyInPerPlayer)}
+                    onChange={(_, d) => setTournamentConfig((prev) => ({ ...prev, buyInPerPlayer: Number(d.value) || 0 }))}
+                  />
+                </div>
+                <div>
+                  <Label>Gross / Net Purse %</Label>
+                  <Input
+                    type="text"
+                    value={`${tournamentConfig.grossPursePercent}/${tournamentConfig.netPursePercent}`}
+                    readOnly
+                  />
+                </div>
+              </div>
+              <Body1 style={{ marginBottom: tokens.spacingVerticalM }}>
+                Detailed payout table is stored in ConfigJson and can be edited later; defaults are 50/30/20 for top 3 places.
+              </Body1>
+            </>
+          )}
+
+          {requiresTeams(form.betType) && (
+            <>
+              {/* Team Assignments */}
+              <Divider style={{ margin: `${tokens.spacingVerticalM} 0` }}>Teams</Divider>
+              {teamAssignments.map((team, tIdx) => (
+                <Card key={tIdx} style={{ marginBottom: tokens.spacingVerticalS, padding: tokens.spacingVerticalS }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalS }}>
+                    <Input
+                      value={team.teamName}
+                      onChange={(_, d) => {
+                        setTeamAssignments((prev) => {
+                          const next = [...prev];
+                          next[tIdx] = { ...next[tIdx], teamName: d.value };
+                          return next;
+                        });
+                      }}
+                      style={{ width: 160 }}
+                    />
+                    <Button size="small" icon={<Delete24Regular />} onClick={() => removeTeam(tIdx)} />
+                  </div>
+                  {team.players.map((p, pIdx) => (
+                    <div key={pIdx} style={{ display: 'flex', gap: tokens.spacingHorizontalS, marginBottom: 4, alignItems: 'center' }}>
+                      <Select
+                        value={String(p.playerId)}
+                        onChange={(_, d) => updateTeamPlayer(tIdx, pIdx, Number(d.value))}
+                        style={{ minWidth: 200 }}
+                      >
+                        <option value="0">Select player...</option>
+                        {match.scores.map((s) => (
+                          <option key={s.playerId} value={String(s.playerId)}>
+                            {s.playerName} (CH: {s.courseHandicap})
+                          </option>
+                        ))}
+                      </Select>
+                      <Badge appearance="outline" size="small">
+                        {TEAM_POSITIONS[pIdx] ?? 'E'}
+                      </Badge>
+                      <Button size="small" icon={<Delete24Regular />} onClick={() => removePlayerFromTeam(tIdx, pIdx)} />
+                    </div>
+                  ))}
+                  <Button size="small" onClick={() => addPlayerToTeam(tIdx)}>
+                    Add Player
+                  </Button>
+                </Card>
               ))}
-              <Button size="small" onClick={() => addPlayerToTeam(tIdx)}>
-                Add Player
+              <Button size="small" icon={<Add24Regular />} onClick={addTeam} style={{ marginBottom: tokens.spacingVerticalM }}>
+                Add Team
               </Button>
-            </Card>
-          ))}
-          <Button size="small" icon={<Add24Regular />} onClick={addTeam} style={{ marginBottom: tokens.spacingVerticalM }}>
-            Add Team
-          </Button>
+            </>
+          )}
 
           <div style={{ display: 'flex', gap: tokens.spacingHorizontalM, marginTop: tokens.spacingVerticalM }}>
             <Button appearance="primary" icon={<Save24Regular />} onClick={handleSaveBet} disabled={saving}>

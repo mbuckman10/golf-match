@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   makeStyles,
-  tokens,
   Title1,
   Button,
   Input,
@@ -19,7 +18,7 @@ import {
   Field,
 } from '@fluentui/react-components';
 import { Save24Regular, ArrowLeft24Regular } from '@fluentui/react-icons';
-import type { CourseDto, CreateCourseRequest, CreateCourseHoleRequest } from '../types';
+import type { CreateCourseRequest, CreateCourseHoleRequest } from '../types';
 import { courseService } from '../services/courseService';
 
 const useStyles = makeStyles({

@@ -1,4 +1,4 @@
-import { makeStyles, tokens, Button, Body1, Caption1, Subtitle2 } from '@fluentui/react-components';
+import { makeStyles, tokens, Button, Caption1, Subtitle2 } from '@fluentui/react-components';
 import { Add24Regular, Subtract24Regular } from '@fluentui/react-icons';
 
 const useStyles = makeStyles({

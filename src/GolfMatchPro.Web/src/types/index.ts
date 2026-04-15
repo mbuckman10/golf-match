@@ -316,3 +316,86 @@ export interface BestBallPlayerSummaryDto {
 export interface BestBallWinLossSummaryDto {
   playerSummaries: BestBallPlayerSummaryDto[];
 }
+
+// Skins result types
+export interface SkinsHoleResultDto {
+  holeNumber: number;
+  carryIn: number;
+  carryOut: number;
+  winnerPlayerId: number | null;
+  winnerPlayerName: string | null;
+  skinsAwarded: number;
+  winningScore: number;
+  tiedPlayerIds: number[];
+}
+
+export interface SkinsPlayerResultDto {
+  playerId: number;
+  playerName: string;
+  skinsWon: number;
+  grossWinnings: number;
+  netWinnings: number;
+}
+
+export interface SkinsResultsDto {
+  totalSkinsAwarded: number;
+  unresolvedCarrySkins: number;
+  totalPot: number;
+  amountPerAwardedSkin: number;
+  holeResults: SkinsHoleResultDto[];
+  playerResults: SkinsPlayerResultDto[];
+}
+
+// Tournament result types
+export interface PlacePayoutDto {
+  place: number;
+  percent: number;
+}
+
+export interface TournamentConfigJsonDto {
+  sponsorMoney: number;
+  buyInPerPlayer: number;
+  grossPursePercent: number;
+  netPursePercent: number;
+  eighteenHolePercent: number;
+  frontNinePercent: number;
+  backNinePercent: number;
+  placePayouts: PlacePayoutDto[];
+}
+
+export interface TournamentDivisionEntryDto {
+  playerId: number;
+  playerName: string;
+  score: number;
+  place: number;
+  payout: number;
+}
+
+export interface TournamentDivisionResultDto {
+  name: string;
+  purse: number;
+  entries: TournamentDivisionEntryDto[];
+}
+
+export interface TournamentLeaderboardEntryDto {
+  playerId: number;
+  playerName: string;
+  gross18: number;
+  net18: number;
+  grossPayout: number;
+  netPayout: number;
+  totalPayout: number;
+}
+
+export interface TournamentResultsDto {
+  prizePool: number;
+  grossPurse: number;
+  netPurse: number;
+  gross18: TournamentDivisionResultDto;
+  grossFront9: TournamentDivisionResultDto;
+  grossBack9: TournamentDivisionResultDto;
+  net18: TournamentDivisionResultDto;
+  netFront9: TournamentDivisionResultDto;
+  netBack9: TournamentDivisionResultDto;
+  leaderboard: TournamentLeaderboardEntryDto[];
+}

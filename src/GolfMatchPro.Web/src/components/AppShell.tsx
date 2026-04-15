@@ -3,29 +3,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   makeStyles,
   tokens,
-  Hamburger,
-  DrawerBody,
-  DrawerHeader,
-  DrawerHeaderTitle,
-  InlineDrawer,
-  OverlayDrawer,
-  NavDrawerBody,
-  NavDrawerHeader,
-  NavItem,
-  NavSectionHeader,
 } from '@fluentui/react-components';
 import {
-  bundleIcon,
   Home24Regular,
-  Home24Filled,
   Location24Regular,
-  SportBaseball24Filled,
   People24Regular,
-  People24Filled,
   Trophy24Regular,
-  Trophy24Filled,
-  Settings24Regular,
-  Settings24Filled,
   Navigation24Regular,
 } from '@fluentui/react-icons';
 

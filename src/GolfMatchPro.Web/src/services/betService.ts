@@ -8,6 +8,8 @@ import type {
   IndividualBetResultsDto,
   BestBallResultsDto,
   BestBallWinLossSummaryDto,
+  SkinsResultsDto,
+  TournamentResultsDto,
 } from '../types';
 
 export const betService = {
@@ -90,5 +92,25 @@ export const betService = {
   getBestBallSummary: async (matchId: number): Promise<BestBallWinLossSummaryDto> => {
     const { data } = await api.get<BestBallWinLossSummaryDto>(`/matches/${matchId}/bestball-summary`);
     return data;
+  },
+
+  // Skins results
+  getSkinsResults: async (matchId: number, betConfigId: number): Promise<SkinsResultsDto> => {
+    const { data } = await api.get<SkinsResultsDto>(`/matches/${matchId}/bets/${betConfigId}/skins-results`);
+    return data;
+  },
+
+  saveSkinsResults: async (matchId: number, betConfigId: number): Promise<void> => {
+    await api.post(`/matches/${matchId}/bets/${betConfigId}/skins-results/save`);
+  },
+
+  // Tournament results
+  getTournamentResults: async (matchId: number, betConfigId: number): Promise<TournamentResultsDto> => {
+    const { data } = await api.get<TournamentResultsDto>(`/matches/${matchId}/bets/${betConfigId}/tournament-results`);
+    return data;
+  },
+
+  saveTournamentResults: async (matchId: number, betConfigId: number): Promise<void> => {
+    await api.post(`/matches/${matchId}/bets/${betConfigId}/tournament-results/save`);
   },
 };

@@ -1,4 +1,4 @@
-import { makeStyles, tokens, Button, Body1 } from '@fluentui/react-components';
+import { makeStyles, tokens, Button } from '@fluentui/react-components';
 import { ChevronLeft24Regular, ChevronRight24Regular } from '@fluentui/react-icons';
 
 const useStyles = makeStyles({

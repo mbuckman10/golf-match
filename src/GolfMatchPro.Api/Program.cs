@@ -4,7 +4,9 @@ using GolfMatchPro.Engine.BestBall;
 using GolfMatchPro.Engine.Handicaps;
 using GolfMatchPro.Engine.Individual;
 using GolfMatchPro.Engine.Nassau;
+using GolfMatchPro.Engine.Skins;
 using GolfMatchPro.Engine.Teams;
+using GolfMatchPro.Engine.Tournament;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +29,8 @@ builder.Services.AddSingleton<INassauCalculator, NassauCalculator>();
 builder.Services.AddSingleton<ITeamBetCalculator, TeamBetCalculator>();
 builder.Services.AddSingleton<IIndividualBetCalculator, IndividualBetCalculator>();
 builder.Services.AddSingleton<IBestBallCalculator, BestBallCalculator>();
+builder.Services.AddSingleton<ISkinsCalculator, SkinsCalculator>();
+builder.Services.AddSingleton<ITournamentCalculator, TournamentCalculator>();
 
 // SignalR
 builder.Services.AddSignalR();

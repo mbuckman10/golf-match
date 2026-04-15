@@ -134,7 +134,11 @@ export function CreateMatchPage() {
           onOptionSelect={(_, d) => setSelectedCourseId(Number(d.optionValue))}
         >
           {courses.map(c => (
-            <Option key={c.courseId} value={c.courseId.toString()}>
+            <Option
+              key={c.courseId}
+              value={c.courseId.toString()}
+              text={`${c.name}${c.teeColor ? ` (${c.teeColor})` : ''}`}
+            >
               {c.name}{c.teeColor ? ` (${c.teeColor})` : ''}
             </Option>
           ))}

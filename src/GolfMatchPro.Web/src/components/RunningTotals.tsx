@@ -1,4 +1,4 @@
-import { makeStyles, tokens, Caption1 } from '@fluentui/react-components';
+import { makeStyles, Caption1 } from '@fluentui/react-components';
 
 const useStyles = makeStyles({
   root: {

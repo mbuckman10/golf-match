@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   makeStyles,
-  tokens,
   Title1,
   Button,
   Spinner,
@@ -165,7 +164,11 @@ export function ScorecardPage() {
             onOptionSelect={(_, d) => setSelectedPlayerId(Number(d.optionValue))}
           >
             {match.scores.map(s => (
-              <Option key={s.playerId} value={s.playerId.toString()}>
+              <Option
+                key={s.playerId}
+                value={s.playerId.toString()}
+                text={`${s.playerNickname ?? s.playerName} (CH: ${s.courseHandicap})`}
+              >
                 {s.playerNickname ?? s.playerName} (CH: {s.courseHandicap})
               </Option>
             ))}

@@ -1,0 +1,45 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "API: dotnet run",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run"],
+      "options": { "cwd": "${workspaceFolder}/src/GolfMatchPro.Api" },
+      "isBackground": true,
+      "problemMatcher": "$msCompile",
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "dev" }
+    },
+    {
+      "label": "Web: npm run dev",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": { "cwd": "${workspaceFolder}/src/GolfMatchPro.Web" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "dev" }
+    },
+    {
+      "label": "Start Dev (API + Web)",
+      "dependsOn": ["API: dotnet run", "Web: npm run dev"],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "Build Solution",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["build", "${workspaceFolder}/GolfMatchPro.slnx"],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Run Tests",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["test", "${workspaceFolder}/GolfMatchPro.slnx"],
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}

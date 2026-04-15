@@ -18,7 +18,7 @@ import {
   bundleIcon,
   Home24Regular,
   Home24Filled,
-  SportBaseball24Regular,
+  Location24Regular,
   SportBaseball24Filled,
   People24Regular,
   People24Filled,
@@ -119,7 +119,7 @@ const navItems: NavLinkItem[] = [
 function getIcon(icon: string) {
   switch (icon) {
     case 'home': return <Home24Regular />;
-    case 'course': return <SportBaseball24Regular />;
+    case 'course': return <Location24Regular />;
     case 'players': return <People24Regular />;
     case 'match': return <Trophy24Regular />;
     default: return <Home24Regular />;

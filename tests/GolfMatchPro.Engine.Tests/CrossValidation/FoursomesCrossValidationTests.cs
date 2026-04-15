@@ -287,42 +287,47 @@ public class FoursomesCrossValidationTests
 
     #endregion
 
-    #region Investment Tests — documents current engine behavior
+    #region Investment Tests — Excel-validated
 
     [Fact]
-    public void InvestmentCalculator_Team2_AllPlayersHaveScores_MatchesExcelPartially()
+    public void InvestmentCalculator_Team2_MatchesExcel()
     {
-        // Team 2 (Sean's) — all 4 players have scores, so engine can evaluate
-        // But the engine checks "all players over par" (gross > par) while
-        // Excel checks "team's best-N balls over par" (different definition).
+        // Team 2 (Sean's) — all 4 players have scores
+        // Excel uses SMALL(playerNets, N) > par for OFF, MAX(playerNets) <= par for Redemption
         var grossList = new List<int[]> { SeanGross, BrettGross, JensenGross, JackGross };
         var strokesList = new List<int[]>();
         foreach (var hdcp in new[] { 2, 8, 13, 23 })
             strokesList.Add(_handicapCalc.DistributeStrokes(hdcp, HdcpRankings));
 
-        var result = InvestmentCalculator.Evaluate(grossList, Pars, strokesList);
+        var result = InvestmentCalculator.Evaluate(grossList, Pars, strokesList, 2, 6m, 3m);
 
-        // Engine uses "all players gross > par" which simplifies from the net check.
-        // Excel OFF on hole 11: Sean(5)=par, so NOT all over par → engine says NO OFF.
-        // This is a known discrepancy — Excel uses team best-2-balls approach.
-        Assert.Equal(0, result.TotalOffs); // Engine: 0, Excel: 1 — DISCREPANCY
+        // Excel: OFF on H11 (SMALL(nets,2)=6 > 5=par)
+        Assert.Equal(1, result.TotalOffs);
+        Assert.True(result.IsOff[10]); // Hole 11 (0-indexed)
+
+        // Excel: Redemptions on H13 and H16 (MAX(nets) <= par, after prior OFF)
+        Assert.Equal(2, result.TotalRedemptions);
+        Assert.True(result.IsRedemption[12]); // Hole 13
+        Assert.True(result.IsRedemption[15]); // Hole 16
     }
 
     [Fact]
-    public void InvestmentCalculator_Team1_MissingPlayerSkipsAllHoles()
+    public void InvestmentCalculator_Team1_MatchesExcel()
     {
-        // Team 1 has Ronnie (all zeros) — engine skips every hole due to allPlayed check
-        // Excel: 1 OFF (hole 16), 1 Redemption (hole 18) — only considers players with scores
+        // Team 1 has Ronnie (gross=0 for all holes — absent).
+        // Absent player's net = 0 - strokes = very negative, naturally handled by SMALL/MAX.
+        // Excel: OFF on H16 (SMALL(nets,2)=6 > 5), Redemption on H18 (MAX=4 <= 4)
         var grossList = new List<int[]> { JeremyGross, GoseGross, JDGross, new int[18] };
         var strokesList = new List<int[]>();
         foreach (var hdcp in new[] { -1, 9, 10, 28 })
             strokesList.Add(_handicapCalc.DistributeStrokes(hdcp, HdcpRankings));
 
-        var result = InvestmentCalculator.Evaluate(grossList, Pars, strokesList);
+        var result = InvestmentCalculator.Evaluate(grossList, Pars, strokesList, 2, 6m, 3m);
 
-        // Engine skips all 18 holes because Ronnie has gross=0 everywhere
-        Assert.Equal(0, result.TotalOffs); // Engine: 0, Excel: 1 — DISCREPANCY
-        Assert.Equal(0, result.TotalRedemptions); // Engine: 0, Excel: 1 — DISCREPANCY
+        Assert.Equal(1, result.TotalOffs);
+        Assert.True(result.IsOff[15]); // Hole 16
+        Assert.Equal(1, result.TotalRedemptions);
+        Assert.True(result.IsRedemption[17]); // Hole 18
     }
 
     #endregion
@@ -369,8 +374,7 @@ public class FoursomesCrossValidationTests
             var net = new int[18];
             for (int h = 0; h < 18; h++)
             {
-                if (gross[h] > 0)
-                    net[h] = gross[h] - strokes[h];
+                net[h] = gross[h] - strokes[h];
             }
             result.Add(net);
         }

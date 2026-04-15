@@ -20,8 +20,7 @@ public static class TeamScoreCalculator
             var holeScores = new List<int>();
             foreach (var playerScores in playerNetScores)
             {
-                if (playerScores[hole] > 0) // Only include if played
-                    holeScores.Add(playerScores[hole]);
+                holeScores.Add(playerScores[hole]);
             }
 
             if (holeScores.Count >= scoresCountingPerHole)

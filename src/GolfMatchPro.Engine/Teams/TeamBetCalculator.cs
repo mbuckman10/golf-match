@@ -155,7 +155,10 @@ public class TeamBetCalculator : ITeamBetCalculator
             teamInvestments[team.TeamNumber] = InvestmentCalculator.Evaluate(
                 teamPlayerGrossScores[team.TeamNumber],
                 config.HolePars,
-                teamPlayerHandicapStrokes[team.TeamNumber]);
+                teamPlayerHandicapStrokes[team.TeamNumber],
+                config.ScoresCountingPerHole,
+                config.InvestmentOffAmount,
+                config.RedemptionAmount);
         }
 
         // 4. Compute total strokes per team

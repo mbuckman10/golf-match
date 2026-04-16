@@ -77,7 +77,7 @@ export function BetResultsPage() {
   };
 
   const fmt = (n: number) => (n >= 0 ? `$${n.toFixed(2)}` : `-$${Math.abs(n).toFixed(2)}`);
-  const fmtColor = (n: number) => (n > 0 ? '#107c10' : n < 0 ? '#d13438' : undefined);
+  const fmtColor = (n: number) => (n > 0 ? 'var(--golf-success)' : n < 0 ? 'var(--golf-danger)' : undefined);
 
   if (loading) return <Spinner label="Loading results..." />;
   if (!match || !bet || !results) return <Body1>Not found</Body1>;
@@ -190,12 +190,12 @@ export function BetResultsPage() {
                       width: 24,
                       height: 24,
                       borderRadius: 4,
-                      backgroundColor: status > 0 ? '#107c10' : status < 0 ? '#d13438' : '#e0e0e0',
+                      backgroundColor: status > 0 ? 'var(--golf-success)' : status < 0 ? 'var(--golf-danger)' : 'var(--golf-neutral-chip)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: 10,
-                      color: status !== 0 ? 'white' : '#666',
+                      color: status !== 0 ? tokens.colorNeutralForegroundInverted : 'var(--golf-chip-text)',
                     }}
                     title={`Hole ${h + 1}: ${status > 0 ? `A ${status} Up` : status < 0 ? `B ${Math.abs(status)} Up` : 'AS'}`}
                   >
@@ -255,12 +255,12 @@ export function BetResultsPage() {
                       width: 32,
                       height: 32,
                       borderRadius: 4,
-                      backgroundColor: t.isOff[h] ? '#d13438' : t.isRedemption[h] ? '#107c10' : '#f3f2f1',
+                      backgroundColor: t.isOff[h] ? 'var(--golf-danger)' : t.isRedemption[h] ? 'var(--golf-success)' : tokens.colorNeutralBackground2,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: 11,
-                      color: t.isOff[h] || t.isRedemption[h] ? 'white' : '#333',
+                      color: t.isOff[h] || t.isRedemption[h] ? tokens.colorNeutralForegroundInverted : tokens.colorNeutralForeground2,
                     }}
                     title={`Hole ${h + 1}: Team score ${score}${t.isOff[h] ? ' (OFF)' : ''}${t.isRedemption[h] ? ' (REDEMPTION)' : ''}`}
                   >

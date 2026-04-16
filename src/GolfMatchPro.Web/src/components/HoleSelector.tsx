@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { makeStyles, tokens, Button } from '@fluentui/react-components';
 import { ChevronLeft24Regular, ChevronRight24Regular } from '@fluentui/react-icons';
 
@@ -7,7 +8,9 @@ const useStyles = makeStyles({
     alignItems: 'center',
     gap: '4px',
     overflowX: 'auto',
-    padding: '4px 0',
+    padding: '6px 4px',
+    scrollbarWidth: 'none',
+    '&::-webkit-scrollbar': { display: 'none' },
   },
   hole: {
     minWidth: '40px',
@@ -22,16 +25,25 @@ const useStyles = makeStyles({
     flexShrink: 0,
   },
   active: {
-    backgroundColor: tokens.colorBrandBackground,
-    color: tokens.colorNeutralForegroundOnBrand,
+    backgroundColor: 'var(--golf-green-500)',
+    color: '#fefaf1',
+    fontWeight: '700',
+    boxShadow: '0 0 0 2px var(--golf-creme-50), 0 0 0 3px var(--golf-green-500), 0 2px 6px rgba(43,130,80,0.35)',
+    transform: 'scale(1.08)',
+    zIndex: '1',
+    position: 'relative',
   },
   scored: {
-    backgroundColor: tokens.colorNeutralBackground3,
-    color: tokens.colorNeutralForeground1,
+    backgroundColor: 'var(--golf-green-700)',
+    color: '#fefaf1',
+    fontWeight: '700',
   },
   unscored: {
-    backgroundColor: tokens.colorNeutralBackground2,
-    color: tokens.colorNeutralForeground3,
+    backgroundColor: 'var(--golf-creme-50)',
+    color: 'var(--golf-ink-soft)',
+    border: '1px dashed var(--golf-creme-300)',
+    fontWeight: '400',
+    opacity: '0.55',
   },
 });
 
@@ -43,6 +55,12 @@ interface HoleSelectorProps {
 
 export function HoleSelector({ currentHole, holeScores, onSelectHole }: HoleSelectorProps) {
   const styles = useStyles();
+  const holeRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    const el = holeRefs.current[currentHole - 1];
+    if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, [currentHole]);
 
   return (
     <div className={styles.root}>
@@ -60,7 +78,12 @@ export function HoleSelector({ currentHole, holeScores, onSelectHole }: HoleSele
         else className += styles.unscored;
 
         return (
-          <div key={hole} className={className} onClick={() => onSelectHole(hole)}>
+          <div
+            key={hole}
+            ref={el => { holeRefs.current[hole - 1] = el; }}
+            className={className}
+            onClick={() => onSelectHole(hole)}
+          >
             {hole}
           </div>
         );

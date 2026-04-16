@@ -46,7 +46,7 @@ export function BestBallSummaryPage() {
   }, [loadData]);
 
   const fmt = (n: number) => (n >= 0 ? `$${n.toFixed(2)}` : `-$${Math.abs(n).toFixed(2)}`);
-  const fmtColor = (n: number) => (n > 0 ? '#107c10' : n < 0 ? '#d13438' : undefined);
+  const fmtColor = (n: number) => (n > 0 ? 'var(--golf-success)' : n < 0 ? 'var(--golf-danger)' : undefined);
 
   if (loading) return <Spinner label="Loading summary..." />;
 

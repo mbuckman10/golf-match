@@ -1,7 +1,8 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { FluentProvider, Spinner, webLightTheme } from '@fluentui/react-components';
+import { FluentProvider, Spinner } from '@fluentui/react-components';
 import { AppShell } from './components/AppShell';
+import { golfTheme } from './theme/golfTheme';
 
 const DashboardPage = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const CoursesPage = lazy(() => import('./pages/CoursesPage').then(m => ({ default: m.CoursesPage })));
@@ -22,7 +23,7 @@ const TournamentResultsPage = lazy(() => import('./pages/TournamentResultsPage')
 
 function App() {
   return (
-    <FluentProvider theme={webLightTheme}>
+    <FluentProvider theme={golfTheme}>
       <BrowserRouter>
         <AppShell>
           <Suspense fallback={<Spinner label="Loading page..." />}>

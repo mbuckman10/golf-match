@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   makeStyles,
   Title1,
+  Title2,
   Button,
   Spinner,
   Body1,
@@ -47,7 +48,18 @@ const useStyles = makeStyles({
     },
   },
   playerSelect: {
-    minWidth: '200px',
+    minWidth: '240px',
+    fontSize: '17px',
+    fontWeight: '700',
+    fontFamily: 'var(--golf-font-classic-display)',
+  },
+  playerLabel: {
+    textAlign: 'center',
+    fontFamily: 'var(--golf-font-classic-display)',
+    fontWeight: '700',
+    color: 'var(--golf-ink)',
+    letterSpacing: '0.02em',
+    marginBottom: '-4px',
   },
 });
 
@@ -158,6 +170,7 @@ export function ScorecardPage() {
             placeholder="Select player"
             value={currentPlayer ? (currentPlayer.playerNickname ?? currentPlayer.playerName) : ''}
             onOptionSelect={(_, d) => setSelectedPlayerId(Number(d.optionValue))}
+            size="large"
           >
             {match.scores.map(s => (
               <Option
@@ -169,6 +182,12 @@ export function ScorecardPage() {
               </Option>
             ))}
           </Dropdown>
+
+          {currentPlayer && (
+            <Title2 className={styles.playerLabel}>
+              {currentPlayer.playerNickname ?? currentPlayer.playerName}
+            </Title2>
+          )}
 
           {currentPlayer && (
             <>

@@ -7,12 +7,12 @@ const useStyles = makeStyles({
   },
   table: {
     borderCollapse: 'collapse',
-    fontSize: '13px',
+    fontSize: '15px',
     width: '100%',
-    minWidth: '900px',
+    minWidth: '1000px',
   },
   th: {
-    padding: '6px 8px',
+    padding: '8px 11px',
     backgroundColor: tokens.colorNeutralBackground3,
     borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
     textAlign: 'center',
@@ -20,7 +20,7 @@ const useStyles = makeStyles({
     whiteSpace: 'nowrap',
   },
   td: {
-    padding: '4px 8px',
+    padding: '6px 11px',
     borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
     textAlign: 'center',
   },
@@ -36,6 +36,12 @@ const useStyles = makeStyles({
   underPar: { color: tokens.colorPaletteGreenForeground1, fontWeight: 'bold' },
   par: { color: tokens.colorPaletteBlueForeground2 },
   overPar: { color: tokens.colorPaletteRedForeground1, fontWeight: 'bold' },
+  emptyCell: {
+    backgroundColor: 'var(--golf-creme-50)',
+    border: '1px dashed var(--golf-creme-300)',
+    color: 'transparent',
+    userSelect: 'none',
+  },
 });
 
 interface ScoreGridProps {
@@ -116,14 +122,14 @@ export function ScoreGrid({ scores, holes }: ScoreGridProps) {
                   <span style={{ fontWeight: 'normal', fontSize: '11px' }}>CH: {s.courseHandicap}</span>
                 </td>
                 {frontHoles.map((h, i) => (
-                  <td key={h.holeNumber} className={`${styles.td} ${getScoreClass(s.holeScores[i], h.par)}`}>
-                    {s.holeScores[i] || ''}
+                  <td key={h.holeNumber} className={`${styles.td} ${s.holeScores[i] ? getScoreClass(s.holeScores[i], h.par) : styles.emptyCell}`}>
+                    {s.holeScores[i] || '·'}
                   </td>
                 ))}
                 <td className={`${styles.td} ${styles.subtotal}`}>{frontScore || ''}</td>
                 {backHoles.map((h, i) => (
-                  <td key={h.holeNumber} className={`${styles.td} ${getScoreClass(s.holeScores[i + 9], h.par)}`}>
-                    {s.holeScores[i + 9] || ''}
+                  <td key={h.holeNumber} className={`${styles.td} ${s.holeScores[i + 9] ? getScoreClass(s.holeScores[i + 9], h.par) : styles.emptyCell}`}>
+                    {s.holeScores[i + 9] || '·'}
                   </td>
                 ))}
                 <td className={`${styles.td} ${styles.subtotal}`}>{backScore || ''}</td>

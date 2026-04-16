@@ -12,8 +12,15 @@ import {
   Body1,
   Caption1,
   Subtitle2,
+  Dialog,
+  DialogTrigger,
+  DialogSurface,
+  DialogTitle,
+  DialogBody,
+  DialogContent,
+  DialogActions,
 } from '@fluentui/react-components';
-import { ArrowLeft24Regular, Play24Regular, Checkmark24Regular } from '@fluentui/react-icons';
+import { ArrowLeft24Regular, Play24Regular, Checkmark24Regular, Delete24Regular } from '@fluentui/react-icons';
 import type { MatchDetailDto, MatchStatus } from '../types';
 import { matchService } from '../services/matchService';
 
@@ -51,12 +58,32 @@ const useStyles = makeStyles({
     gap: '8px',
     flexWrap: 'wrap',
   },
+  deleteBtn: {
+    color: 'var(--golf-ink-soft)',
+    '& svg': { color: 'inherit' },
+    ':hover': {
+      color: 'var(--golf-danger)',
+      backgroundColor: 'rgba(163,62,62,0.08)',
+    },
+    ':hover svg': { color: 'var(--golf-danger)' },
+    ':active': {
+      color: '#7a1f1f',
+      backgroundColor: 'rgba(163,62,62,0.16)',
+    },
+    ':active svg': { color: '#7a1f1f' },
+  },
 });
 
 const statusColor: Record<MatchStatus, 'success' | 'warning' | 'informative'> = {
   Setup: 'informative',
   InProgress: 'warning',
   Completed: 'success',
+};
+
+const statusLabel: Record<MatchStatus, string> = {
+  Setup: 'Setup',
+  InProgress: 'In Progress',
+  Completed: 'Completed',
 };
 
 export function MatchDetailPage() {
@@ -68,6 +95,7 @@ export function MatchDetailPage() {
   const [match, setMatch] = useState<MatchDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const loadMatch = useCallback(() => {
     matchService.getById(matchId)
@@ -90,9 +118,11 @@ export function MatchDetailPage() {
   const handleDelete = async () => {
     try {
       await matchService.delete(matchId);
-      navigate('/matches');
+      navigate('/');
     } catch {
       setError('Failed to delete match.');
+    } finally {
+      setDeleteOpen(false);
     }
   };
 
@@ -109,7 +139,7 @@ export function MatchDetailPage() {
         />
         <Title1>{match.course.name}</Title1>
         <Badge appearance="filled" color={statusColor[match.status]}>
-          {match.status}
+          {statusLabel[match.status]}
         </Badge>
       </div>
 
@@ -152,10 +182,12 @@ export function MatchDetailPage() {
               Start Match
             </Button>
             <Button
-              appearance="secondary"
-              onClick={handleDelete}
+              appearance="subtle"
+              className={styles.deleteBtn}
+              icon={<Delete24Regular />}
+              onClick={() => setDeleteOpen(true)}
             >
-              Delete Match
+              Delete
             </Button>
           </>
         )}
@@ -180,6 +212,14 @@ export function MatchDetailPage() {
             >
               Complete Match
             </Button>
+            <Button
+              appearance="subtle"
+              className={styles.deleteBtn}
+              icon={<Delete24Regular />}
+              onClick={() => setDeleteOpen(true)}
+            >
+              Delete
+            </Button>
           </>
         )}
         {match.status === 'Completed' && (
@@ -199,6 +239,30 @@ export function MatchDetailPage() {
           </>
         )}
       </div>
+
+      <Dialog open={deleteOpen} onOpenChange={(_, d) => setDeleteOpen(d.open)}>
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle>Delete this match?</DialogTitle>
+            <DialogContent>
+              This will permanently remove the match and all associated scores. This cannot be undone.
+            </DialogContent>
+            <DialogActions>
+              <DialogTrigger disableButtonEnhancement>
+                <Button appearance="secondary">Cancel</Button>
+              </DialogTrigger>
+              <Button
+                appearance="primary"
+                onClick={handleDelete}
+                icon={<Delete24Regular />}
+                style={{ backgroundColor: '#a33e3e', borderColor: '#a33e3e', color: '#fff' }}
+              >
+                Delete Match
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
     </div>
   );
 }

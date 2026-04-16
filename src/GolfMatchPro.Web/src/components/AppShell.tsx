@@ -17,11 +17,14 @@ const useStyles = makeStyles({
     display: 'flex',
     height: '100vh',
     overflow: 'hidden',
+    backgroundColor: 'var(--golf-creme-50)',
   },
   nav: {
     width: '240px',
     flexShrink: 0,
     borderRight: `1px solid ${tokens.colorNeutralStroke1}`,
+    backgroundColor: 'var(--golf-creme-100)',
+    boxShadow: 'var(--golf-card-shadow)',
     '@media (max-width: 768px)': {
       display: 'none',
     },
@@ -30,6 +33,8 @@ const useStyles = makeStyles({
     display: 'none',
     padding: '8px 16px',
     borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
+    backgroundColor: 'rgba(252, 246, 233, 0.92)',
+    backdropFilter: 'blur(4px)',
     alignItems: 'center',
     gap: '8px',
     '@media (max-width: 768px)': {
@@ -45,6 +50,7 @@ const useStyles = makeStyles({
   main: {
     flex: 1,
     padding: '24px',
+    backgroundColor: 'transparent',
     '@media (max-width: 768px)': {
       padding: '16px',
     },
@@ -54,6 +60,7 @@ const useStyles = makeStyles({
     fontWeight: tokens.fontWeightSemibold,
     fontSize: tokens.fontSizeBase500,
     color: tokens.colorBrandForeground1,
+    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
   },
   navList: {
     listStyle: 'none',
@@ -70,8 +77,10 @@ const useStyles = makeStyles({
     textDecoration: 'none',
     borderRadius: tokens.borderRadiusMedium,
     margin: '2px 8px',
+    transition: 'background-color 120ms ease, transform 120ms ease',
     '&:hover': {
       backgroundColor: tokens.colorNeutralBackground1Hover,
+      transform: 'translateX(2px)',
     },
   },
   navItemActive: {
@@ -152,7 +161,7 @@ export function AppShell({ children }: AppShellProps) {
     <div className={styles.root}>
       {/* Desktop sidebar */}
       <nav className={styles.nav}>
-        <div className={styles.navHeader}>Golf Match Pro</div>
+        <div className={styles.navHeader}>The Spreadsheet</div>
         {renderNavItems()}
       </nav>
 
@@ -161,7 +170,7 @@ export function AppShell({ children }: AppShellProps) {
         <div
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 1000
+            backgroundColor: 'rgba(22, 44, 30, 0.35)', zIndex: 1000
           }}
           onClick={() => setMobileNavOpen(false)}
         >
@@ -172,7 +181,7 @@ export function AppShell({ children }: AppShellProps) {
             }}
             onClick={e => e.stopPropagation()}
           >
-            <div className={styles.navHeader}>Golf Match Pro</div>
+            <div className={styles.navHeader}>The Spreadsheet</div>
             {renderNavItems()}
           </div>
         </div>
@@ -185,7 +194,7 @@ export function AppShell({ children }: AppShellProps) {
             style={{ cursor: 'pointer' }}
             onClick={() => setMobileNavOpen(true)}
           />
-          <span className={styles.title}>Golf Match Pro</span>
+          <span className={styles.title}>The Spreadsheet</span>
         </div>
 
         <main className={styles.main}>

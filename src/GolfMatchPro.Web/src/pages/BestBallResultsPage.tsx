@@ -77,7 +77,7 @@ export function BestBallResultsPage() {
   };
 
   const fmt = (n: number) => (n >= 0 ? `$${n.toFixed(2)}` : `-$${Math.abs(n).toFixed(2)}`);
-  const fmtColor = (n: number) => (n > 0 ? '#107c10' : n < 0 ? '#d13438' : undefined);
+  const fmtColor = (n: number) => (n > 0 ? 'var(--golf-success)' : n < 0 ? 'var(--golf-danger)' : undefined);
 
   if (loading) return <Spinner label="Loading results..." />;
   if (!match || !bet || !results) return <Body1>Not found</Body1>;
@@ -172,12 +172,17 @@ export function BestBallResultsPage() {
                     width: 24,
                     height: 24,
                     borderRadius: 4,
-                    backgroundColor: m.holeByHoleStatus[h] > 0 ? '#107c10' : m.holeByHoleStatus[h] < 0 ? '#d13438' : '#e0e0e0',
+                    backgroundColor:
+                      m.holeByHoleStatus[h] > 0
+                        ? 'var(--golf-success)'
+                        : m.holeByHoleStatus[h] < 0
+                          ? 'var(--golf-danger)'
+                          : 'var(--golf-neutral-chip)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: 10,
-                    color: m.holeByHoleStatus[h] !== 0 ? 'white' : '#666',
+                    color: m.holeByHoleStatus[h] !== 0 ? tokens.colorNeutralForegroundInverted : 'var(--golf-chip-text)',
                   }}
                   title={`Hole ${h + 1}: SH ${score} vs Opp ${m.opponentBestBall[h]}`}
                 >
@@ -194,12 +199,12 @@ export function BestBallResultsPage() {
                     width: 24,
                     height: 24,
                     borderRadius: 4,
-                    backgroundColor: '#f3f2f1',
+                    backgroundColor: tokens.colorNeutralBackground2,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: 10,
-                    color: '#333',
+                    color: tokens.colorNeutralForeground2,
                   }}
                   title={`Hole ${h + 1}`}
                 >

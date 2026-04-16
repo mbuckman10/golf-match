@@ -1,3 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Lora:wght@400;500;600;700&display=swap');
+
+:root {
+  --golf-creme-50: #fefaf1;
+  --golf-creme-100: #fbf4e5;
+  --golf-creme-200: #efe2c7;
+  --golf-creme-300: #e2d2af;
+  --golf-ink: #1f3829;
+  --golf-ink-soft: #4a6455;
+  --golf-green-700: #16522d;
+  --golf-green-600: #1e6a3a;
+  --golf-green-500: #2b8250;
+  --golf-success: #1f7a3d;
+  --golf-danger: #a33e3e;
+  --golf-neutral-chip: #ddcfb2;
+  --golf-chip-text: #4a5f54;
+  --golf-card-shadow: 0 12px 28px rgba(32, 52, 39, 0.08);
+  --golf-font-classic-display: 'Cinzel', 'Times New Roman', serif;
+  --golf-font-classic-body: 'Lora', Georgia, serif;
+}
+
+html {
+  font-size: 17px;
+}
+
 *,
 *::before,
 *::after {
@@ -7,8 +32,35 @@
 body {
   margin: 0;
   padding: 0;
+  min-height: 100vh;
+  font-family: var(--golf-font-classic-body);
+  color: var(--golf-ink);
+  background:
+    radial-gradient(circle at 6% -8%, rgba(30, 106, 58, 0.16), transparent 32%),
+    radial-gradient(circle at 108% 8%, rgba(30, 106, 58, 0.14), transparent 30%),
+    linear-gradient(180deg, var(--golf-creme-50) 0%, var(--golf-creme-100) 100%);
 }
 
 #root {
   min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--golf-font-classic-display);
+  letter-spacing: 0.01em;
+}
+
+button,
+[role='button'] {
+  font-family: var(--golf-font-classic-display);
+  letter-spacing: 0.015em;
+}
+
+::selection {
+  background: rgba(30, 106, 58, 0.24);
 }

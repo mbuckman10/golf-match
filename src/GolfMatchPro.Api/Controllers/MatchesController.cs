@@ -210,8 +210,6 @@ public class MatchesController(GolfMatchDbContext db, IHandicapCalculator handic
 
         if (match is null)
             return NotFound();
-        if (match.Status == MatchStatus.InProgress)
-            return BadRequest(new { error = "Cannot delete an in-progress match." });
 
         db.Matches.Remove(match);
         await db.SaveChangesAsync();

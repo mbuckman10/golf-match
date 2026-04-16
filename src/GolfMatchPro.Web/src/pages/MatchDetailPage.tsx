@@ -20,9 +20,10 @@ import {
   DialogContent,
   DialogActions,
 } from '@fluentui/react-components';
-import { ArrowLeft24Regular, Play24Regular, Checkmark24Regular, Delete24Regular } from '@fluentui/react-icons';
+import { ArrowLeft24Regular, Play24Regular, Checkmark24Regular, Delete24Regular, Archive24Regular } from '@fluentui/react-icons';
 import type { MatchDetailDto, MatchStatus } from '../types';
 import { matchService } from '../services/matchService';
+import { formatDateMdY } from '../utils/date';
 
 const useStyles = makeStyles({
   root: {
@@ -96,6 +97,7 @@ export function MatchDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
 
   const loadMatch = useCallback(() => {
     matchService.getById(matchId)
@@ -109,6 +111,11 @@ export function MatchDetailPage() {
   const handleStatusChange = async (newStatus: MatchStatus) => {
     try {
       await matchService.updateStatus(matchId, newStatus);
+      if (newStatus === 'InProgress') {
+        navigate(`/matches/${matchId}/scorecard`);
+        return;
+      }
+
       loadMatch();
     } catch {
       setError('Failed to update status.');
@@ -137,7 +144,7 @@ export function MatchDetailPage() {
           icon={<ArrowLeft24Regular />}
           onClick={() => navigate('/')}
         />
-        <Title1>{match.course.name}</Title1>
+        <Title1>{match.matchName}</Title1>
         <Badge appearance="filled" color={statusColor[match.status]}>
           {statusLabel[match.status]}
         </Badge>
@@ -150,7 +157,8 @@ export function MatchDetailPage() {
       )}
 
       <div className={styles.info}>
-        <Caption1>Date: {match.matchDate}</Caption1>
+        <Caption1>Course: {match.course.name}{match.course.teeColor ? ` (${match.course.teeColor})` : ''}</Caption1>
+        <Caption1>Date: {formatDateMdY(match.matchDate)}</Caption1>
         <Caption1>Course Rating: {match.course.courseRating}</Caption1>
         <Caption1>Slope: {match.course.slopeRating}</Caption1>
         <Caption1>Par: {match.course.par}</Caption1>
@@ -236,6 +244,21 @@ export function MatchDetailPage() {
             >
               Bets & Results
             </Button>
+            <Button
+              appearance="outline"
+              icon={<Archive24Regular />}
+              onClick={() => setArchiveOpen(true)}
+            >
+              Archive
+            </Button>
+            <Button
+              appearance="subtle"
+              className={styles.deleteBtn}
+              icon={<Delete24Regular />}
+              onClick={() => setDeleteOpen(true)}
+            >
+              Delete
+            </Button>
           </>
         )}
       </div>
@@ -258,6 +281,38 @@ export function MatchDetailPage() {
                 style={{ backgroundColor: '#a33e3e', borderColor: '#a33e3e', color: '#fff' }}
               >
                 Delete Match
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
+
+      <Dialog open={archiveOpen} onOpenChange={(_, d) => setArchiveOpen(d.open)}>
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle>Archive this match?</DialogTitle>
+            <DialogContent>
+              The match will be hidden from the matches list. You can access archived matches later from the archive screen.
+            </DialogContent>
+            <DialogActions>
+              <DialogTrigger disableButtonEnhancement>
+                <Button appearance="secondary">Cancel</Button>
+              </DialogTrigger>
+              <Button
+                appearance="primary"
+                icon={<Archive24Regular />}
+                onClick={async () => {
+                  try {
+                    await matchService.archive(matchId);
+                    navigate('/');
+                  } catch (err: any) {
+                    setError(err?.response?.data?.error ?? 'Failed to archive match.');
+                  } finally {
+                    setArchiveOpen(false);
+                  }
+                }}
+              >
+                Archive Match
               </Button>
             </DialogActions>
           </DialogBody>

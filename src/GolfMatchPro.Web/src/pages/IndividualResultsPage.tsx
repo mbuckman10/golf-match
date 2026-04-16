@@ -141,22 +141,22 @@ export function IndividualResultsPage() {
             <Title2 style={{ fontSize: 16, marginBottom: tokens.spacingVerticalS }}>
               {m.playerAName} vs {m.playerBName}
             </Title2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: tokens.spacingHorizontalL }}>
-              <div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalXL}` }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <Body2>Front 9</Body2>
                 <Body1 style={{ color: fmtColor(m.front9Result), fontWeight: 'bold' }}>
                   {m.front9Result > 0 ? `A ${m.front9Result} Up` : m.front9Result < 0 ? `B ${Math.abs(m.front9Result)} Up` : 'Halved'}{' '}
                   ({fmt(m.nassauFrontDollars)})
                 </Body1>
               </div>
-              <div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <Body2>Back 9</Body2>
                 <Body1 style={{ color: fmtColor(m.back9Result), fontWeight: 'bold' }}>
                   {m.back9Result > 0 ? `A ${m.back9Result} Up` : m.back9Result < 0 ? `B ${Math.abs(m.back9Result)} Up` : 'Halved'}{' '}
                   ({fmt(m.nassauBackDollars)})
                 </Body1>
               </div>
-              <div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <Body2>Overall 18</Body2>
                 <Body1 style={{ color: fmtColor(m.overall18Result), fontWeight: 'bold' }}>
                   {m.overall18Result > 0
@@ -167,7 +167,7 @@ export function IndividualResultsPage() {
                   ({fmt(m.nassau18Dollars)})
                 </Body1>
               </div>
-              <div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <Body2>Total (w/ Presses)</Body2>
                 <Body1 style={{ color: fmtColor(m.totalAmountPlayerA), fontWeight: 'bold' }}>
                   {fmt(m.totalAmountPlayerA)}

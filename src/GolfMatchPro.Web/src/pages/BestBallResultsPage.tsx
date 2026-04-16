@@ -141,22 +141,22 @@ export function BestBallResultsPage() {
               {m.sheetHangerTeamName ?? `Team ${m.sheetHangerTeamNumber}`} (SH) vs{' '}
               {m.opponentTeamName ?? `Team ${m.opponentTeamNumber}`}
             </Title2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: tokens.spacingHorizontalL }}>
-              <div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalXL}` }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <Body2>Front 9</Body2>
                 <Body1 style={{ color: fmtColor(m.front9Result), fontWeight: 'bold' }}>
                   {m.front9Result > 0 ? `SH ${m.front9Result} Up` : m.front9Result < 0 ? `Opp ${Math.abs(m.front9Result)} Up` : 'Halved'}{' '}
                   ({fmt(m.nassauFrontDollars)})
                 </Body1>
               </div>
-              <div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <Body2>Back 9</Body2>
                 <Body1 style={{ color: fmtColor(m.back9Result), fontWeight: 'bold' }}>
                   {m.back9Result > 0 ? `SH ${m.back9Result} Up` : m.back9Result < 0 ? `Opp ${Math.abs(m.back9Result)} Up` : 'Halved'}{' '}
                   ({fmt(m.nassauBackDollars)})
                 </Body1>
               </div>
-              <div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <Body2>Overall 18</Body2>
                 <Body1 style={{ color: fmtColor(m.overall18Result), fontWeight: 'bold' }}>
                   {m.overall18Result > 0
@@ -167,7 +167,7 @@ export function BestBallResultsPage() {
                   ({fmt(m.nassau18Dollars)})
                 </Body1>
               </div>
-              <div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <Body2>Total (w/ Presses)</Body2>
                 <Body1 style={{ color: fmtColor(m.totalAmountSheetHanger), fontWeight: 'bold' }}>
                   {fmt(m.totalAmountSheetHanger)}

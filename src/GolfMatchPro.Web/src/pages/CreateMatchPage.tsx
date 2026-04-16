@@ -152,6 +152,7 @@ export function CreateMatchPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
+  const [matchName, setMatchName] = useState('');
   const [matchDate, setMatchDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<number>>(new Set());
 
@@ -191,6 +192,10 @@ export function CreateMatchPage() {
       setError('Please select a course.');
       return;
     }
+    if (!matchName.trim()) {
+      setError('Please enter a match name.');
+      return;
+    }
     if (selectedPlayerIds.size === 0) {
       setError('Please select at least one player.');
       return;
@@ -203,6 +208,7 @@ export function CreateMatchPage() {
       // Use first selected player as creator for now (no auth yet)
       const creatorId = [...selectedPlayerIds][0];
       const match = await matchService.create({
+        matchName: matchName.trim(),
         courseId: selectedCourseId,
         matchDate: matchDate,
         createdByPlayerId: creatorId,
@@ -253,6 +259,15 @@ export function CreateMatchPage() {
             </Option>
           ))}
         </Dropdown>
+      </Field>
+
+      <Field label="Match Name" required>
+        <Input
+          className={styles.fieldControl}
+          placeholder="Saturday Morning Group"
+          value={matchName}
+          onChange={(_, d) => setMatchName(d.value)}
+        />
       </Field>
 
       <Field label="Date" required>

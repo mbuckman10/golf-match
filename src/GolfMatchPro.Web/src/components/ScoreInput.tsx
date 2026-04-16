@@ -33,6 +33,36 @@ const useStyles = makeStyles({
   underPar: { color: tokens.colorPaletteGreenForeground1 },
   par: { color: tokens.colorPaletteBlueForeground2 },
   overPar: { color: tokens.colorPaletteRedForeground1 },
+  quickButtons: {
+    display: 'flex',
+    gap: '8px',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  birdieButton: {
+    backgroundColor: tokens.colorPaletteGreenBackground1,
+    color: tokens.colorPaletteGreenForeground1,
+    borderColor: tokens.colorPaletteGreenBorder1,
+    ':hover': {
+      backgroundColor: tokens.colorPaletteGreenBackground2,
+    },
+  },
+  parButton: {
+    backgroundColor: tokens.colorPaletteBlueBackground1,
+    color: tokens.colorPaletteBlueForeground1,
+    borderColor: tokens.colorPaletteBlueBorder1,
+    ':hover': {
+      backgroundColor: tokens.colorPaletteBlueBackground2,
+    },
+  },
+  bogeyButton: {
+    backgroundColor: tokens.colorPaletteRedBackground1,
+    color: tokens.colorPaletteRedForeground1,
+    borderColor: tokens.colorPaletteRedBorder1,
+    ':hover': {
+      backgroundColor: tokens.colorPaletteRedBackground2,
+    },
+  },
 });
 
 interface ScoreInputProps {
@@ -90,15 +120,32 @@ export function ScoreInput({
           disabled={disabled || score >= 15}
         />
       </div>
-      {currentScore === 0 && (
+      <div className={styles.quickButtons}>
         <Button
-          appearance="primary"
+          appearance="outline"
+          className={styles.birdieButton}
+          onClick={() => onScoreChange(par - 1)}
+          disabled={disabled || par - 1 < 1}
+        >
+          Birdie ({par - 1})
+        </Button>
+        <Button
+          appearance="outline"
+          className={styles.parButton}
           onClick={() => onScoreChange(par)}
           disabled={disabled}
         >
-          Set Par ({par})
+          Par ({par})
         </Button>
-      )}
+        <Button
+          appearance="outline"
+          className={styles.bogeyButton}
+          onClick={() => onScoreChange(par + 1)}
+          disabled={disabled}
+        >
+          Bogey ({par + 1})
+        </Button>
+      </div>
     </div>
   );
 }

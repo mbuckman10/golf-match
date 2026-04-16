@@ -16,13 +16,16 @@ public class MatchesController(GolfMatchDbContext db, IHandicapCalculator handic
     public async Task<ActionResult<List<MatchDto>>> GetAll(
         [FromQuery] MatchStatus? status = null,
         [FromQuery] DateOnly? from = null,
-        [FromQuery] DateOnly? to = null)
+        [FromQuery] DateOnly? to = null,
+        [FromQuery] bool includeArchived = false)
     {
         var query = db.Matches
             .Include(m => m.Course)
             .Include(m => m.Scores)
             .AsQueryable();
 
+        if (!includeArchived)
+            query = query.Where(m => !m.IsArchived);
         if (status.HasValue)
             query = query.Where(m => m.Status == status.Value);
         if (from.HasValue)
@@ -57,6 +60,9 @@ public class MatchesController(GolfMatchDbContext db, IHandicapCalculator handic
     [HttpPost]
     public async Task<ActionResult<MatchDetailDto>> Create(CreateMatchRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.MatchName))
+            return BadRequest(new { error = "Match name is required." });
+
         var course = await db.Courses
             .Include(c => c.Holes)
             .FirstOrDefaultAsync(c => c.CourseId == request.CourseId);
@@ -70,6 +76,7 @@ public class MatchesController(GolfMatchDbContext db, IHandicapCalculator handic
 
         var match = new Match
         {
+            MatchName = request.MatchName.Trim(),
             CourseId = request.CourseId,
             MatchDate = request.MatchDate,
             CreatedByPlayerId = request.CreatedByPlayerId,
@@ -217,13 +224,31 @@ public class MatchesController(GolfMatchDbContext db, IHandicapCalculator handic
         return NoContent();
     }
 
+    [HttpPut("{id:int}/archive")]
+    public async Task<IActionResult> Archive(int id)
+    {
+        var match = await db.Matches.FindAsync(id);
+        if (match is null)
+            return NotFound();
+        if (match.Status != MatchStatus.Completed)
+            return BadRequest(new { error = "Only completed matches can be archived." });
+
+        match.IsArchived = true;
+        await db.SaveChangesAsync();
+
+        return NoContent();
+    }
+
     private static MatchDto MapToDto(Match m) => new()
     {
         MatchId = m.MatchId,
+        MatchName = m.MatchName,
         CourseId = m.CourseId,
         CourseName = m.Course.Name,
+        CourseTeeColor = m.Course.TeeColor,
         MatchDate = m.MatchDate,
         Status = m.Status,
+        IsArchived = m.IsArchived,
         CreatedByPlayerId = m.CreatedByPlayerId,
         PlayerCount = m.Scores.Count
     };
@@ -231,6 +256,7 @@ public class MatchesController(GolfMatchDbContext db, IHandicapCalculator handic
     private static MatchDetailDto MapToDetailDto(Match m) => new()
     {
         MatchId = m.MatchId,
+        MatchName = m.MatchName,
         Course = new CourseDto
         {
             CourseId = m.Course.CourseId,
@@ -250,6 +276,7 @@ public class MatchesController(GolfMatchDbContext db, IHandicapCalculator handic
         },
         MatchDate = m.MatchDate,
         Status = m.Status,
+        IsArchived = m.IsArchived,
         CreatedByPlayerId = m.CreatedByPlayerId,
         Scores = m.Scores.Select(MapToScoreDto).ToList()
     };

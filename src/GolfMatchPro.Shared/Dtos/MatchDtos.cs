@@ -5,10 +5,13 @@ namespace GolfMatchPro.Shared.Dtos;
 public class MatchDto
 {
     public int MatchId { get; set; }
+    public string MatchName { get; set; } = string.Empty;
     public int CourseId { get; set; }
     public string CourseName { get; set; } = string.Empty;
+    public string? CourseTeeColor { get; set; }
     public DateOnly MatchDate { get; set; }
     public MatchStatus Status { get; set; }
+    public bool IsArchived { get; set; }
     public int CreatedByPlayerId { get; set; }
     public int PlayerCount { get; set; }
 }
@@ -16,9 +19,11 @@ public class MatchDto
 public class MatchDetailDto
 {
     public int MatchId { get; set; }
+    public string MatchName { get; set; } = string.Empty;
     public CourseDto Course { get; set; } = null!;
     public DateOnly MatchDate { get; set; }
     public MatchStatus Status { get; set; }
+    public bool IsArchived { get; set; }
     public int CreatedByPlayerId { get; set; }
     public List<MatchScoreDto> Scores { get; set; } = [];
 }
@@ -39,6 +44,7 @@ public class MatchScoreDto
 
 public class CreateMatchRequest
 {
+    public string MatchName { get; set; } = string.Empty;
     public int CourseId { get; set; }
     public DateOnly MatchDate { get; set; }
     public int CreatedByPlayerId { get; set; }

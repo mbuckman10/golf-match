@@ -38,6 +38,10 @@ export const matchService = {
     await api.delete(`/matches/${id}`);
   },
 
+  archive: async (id: number): Promise<void> => {
+    await api.put(`/matches/${id}/archive`);
+  },
+
   // Scores
   getScores: async (matchId: number): Promise<MatchScoreDto[]> => {
     const { data } = await api.get<MatchScoreDto[]>(`/matches/${matchId}/scores`);

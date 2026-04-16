@@ -38,6 +38,25 @@ const useStyles = makeStyles({
     gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
     gap: '16px',
   },
+  fieldControl: {
+    '--colorCompoundBrandStroke': 'var(--golf-green-500)',
+    '--colorCompoundBrandStrokeHover': 'var(--golf-green-600)',
+    '--colorCompoundBrandStrokePressed': 'var(--golf-green-700)',
+    '--colorStrokeFocus2': 'var(--golf-green-500)',
+    backgroundColor: '#fffdf8',
+    minHeight: '32px',
+    ':hover': {
+      backgroundColor: '#fffefb',
+      boxShadow: 'inset 0 0 0 1px rgba(43,130,80,0.28)',
+    },
+    ':focus-within': {
+      backgroundColor: '#fffefb',
+      boxShadow: '0 0 0 2px rgba(43,130,80,0.18)',
+    },
+    '& input:focus': {
+      outlineColor: 'var(--golf-green-500)',
+    },
+  },
   holeInput: {
     width: '70px',
   },
@@ -151,19 +170,19 @@ export function CourseEditorPage() {
 
       <div className={styles.formRow}>
         <Field label="Course Name" required>
-          <Input value={name} onChange={(_, d) => setName(d.value)} placeholder="e.g., Pine Valley" />
+          <Input className={styles.fieldControl} value={name} onChange={(_, d) => setName(d.value)} placeholder="e.g., Pine Valley" />
         </Field>
         <Field label="Tee Color">
-          <Input value={teeColor} onChange={(_, d) => setTeeColor(d.value)} placeholder="e.g., Blue" />
+          <Input className={styles.fieldControl} value={teeColor} onChange={(_, d) => setTeeColor(d.value)} placeholder="e.g., Blue" />
         </Field>
         <Field label="Year of Info">
-          <Input value={yearOfInfo} onChange={(_, d) => setYearOfInfo(d.value)} type="number" />
+          <Input className={styles.fieldControl} value={yearOfInfo} onChange={(_, d) => setYearOfInfo(d.value)} type="number" />
         </Field>
         <Field label="Course Rating" required>
-          <Input value={courseRating} onChange={(_, d) => setCourseRating(d.value)} type="number" step="0.1" />
+          <Input className={styles.fieldControl} value={courseRating} onChange={(_, d) => setCourseRating(d.value)} type="number" step="0.1" />
         </Field>
         <Field label="Slope Rating" required>
-          <Input value={slopeRating} onChange={(_, d) => setSlopeRating(d.value)} type="number" />
+          <Input className={styles.fieldControl} value={slopeRating} onChange={(_, d) => setSlopeRating(d.value)} type="number" />
         </Field>
       </div>
 
@@ -182,7 +201,7 @@ export function CourseEditorPage() {
               <TableCell>{hole.holeNumber}</TableCell>
               <TableCell>
                 <Input
-                  className={styles.holeInput}
+                  className={`${styles.fieldControl} ${styles.holeInput}`}
                   value={hole.par.toString()}
                   onChange={(_, d) => updateHole(i, 'par', d.value)}
                   type="number"
@@ -192,7 +211,7 @@ export function CourseEditorPage() {
               </TableCell>
               <TableCell>
                 <Input
-                  className={styles.holeInput}
+                  className={`${styles.fieldControl} ${styles.holeInput}`}
                   value={hole.handicapRanking.toString()}
                   onChange={(_, d) => updateHole(i, 'handicapRanking', d.value)}
                   type="number"

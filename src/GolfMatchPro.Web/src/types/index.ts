@@ -60,19 +60,24 @@ export type MatchStatus = 'Setup' | 'InProgress' | 'Completed';
 
 export interface MatchDto {
   matchId: number;
+  matchName: string;
   courseId: number;
   courseName: string;
+  courseTeeColor: string | null;
   matchDate: string;
   status: MatchStatus;
+  isArchived: boolean;
   createdByPlayerId: number;
   playerCount: number;
 }
 
 export interface MatchDetailDto {
   matchId: number;
+  matchName: string;
   course: CourseDto;
   matchDate: string;
   status: MatchStatus;
+  isArchived: boolean;
   createdByPlayerId: number;
   scores: MatchScoreDto[];
 }
@@ -91,6 +96,7 @@ export interface MatchScoreDto {
 }
 
 export interface CreateMatchRequest {
+  matchName: string;
   courseId: number;
   matchDate: string;
   createdByPlayerId: number;

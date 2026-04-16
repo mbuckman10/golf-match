@@ -15,6 +15,7 @@ import {
 import { Add24Regular } from '@fluentui/react-icons';
 import { useNavigate } from 'react-router-dom';
 import { matchService } from '../services/matchService';
+import { formatDateMdY } from '../utils/date';
 import type { MatchDto, MatchStatus } from '../types';
 
 const useStyles = makeStyles({
@@ -132,8 +133,8 @@ export function DashboardPage() {
             {activeMatches.map((match) => (
               <Card key={match.matchId} className={styles.card} onClick={() => openMatch(match)}>
                 <CardHeader
-                  header={<Body1><b>{match.courseName}</b></Body1>}
-                  description={<Caption1>{match.matchDate}</Caption1>}
+                  header={<Body1><b>{match.matchName}</b></Body1>}
+                  description={<Caption1>{match.courseName}{match.courseTeeColor ? ` (${match.courseTeeColor})` : ''} - {formatDateMdY(match.matchDate)}</Caption1>}
                   action={
                     <Badge className={styles.statusBadge} appearance="filled" color={statusColor[match.status]}>
                       {statusLabel[match.status]}

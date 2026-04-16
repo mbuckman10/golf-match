@@ -23,7 +23,7 @@ import {
   DialogContent,
   DialogActions,
 } from '@fluentui/react-components';
-import { ArrowLeft24Regular, Play24Regular, Checkmark24Regular, Delete24Regular } from '@fluentui/react-icons';
+import { ArrowLeft24Regular, Play24Regular, Checkmark24Regular, Delete24Regular, Archive24Regular } from '@fluentui/react-icons';
 import type { MatchDetailDto, MatchScoreDto, CourseHoleDto } from '../types';
 import { matchService } from '../services/matchService';
 import { startConnection, joinMatch, leaveMatch, onScoreUpdated, offScoreUpdated } from '../services/signalRService';
@@ -34,6 +34,7 @@ import { ScoreGrid } from '../components/ScoreGrid';
 import { BetConfigPage } from './BetConfigPage';
 import { MessageBar, MessageBarBody } from '@fluentui/react-components';
 import { annotate } from 'rough-notation';
+import { formatDateMdY } from '../utils/date';
 
 const useStyles = makeStyles({
   root: {
@@ -158,6 +159,7 @@ export function ScorecardPage() {
   const [tab, setTab] = useState<string>('entry');
   const [saving, setSaving] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const requestedTab = searchParams.get('tab');
@@ -306,7 +308,8 @@ export function ScorecardPage() {
           icon={<ArrowLeft24Regular />}
           onClick={() => navigate('/matches')}
         />
-        <Title1>{match.course.name}</Title1>
+        <Title1>{match.matchName}</Title1>
+        <Caption1>{match.course.name}{match.course.teeColor ? ` (${match.course.teeColor})` : ''}</Caption1>
         {match && (
           <Badge appearance="filled" color={statusColor[match.status]}>
             {statusLabel[match.status]}
@@ -336,7 +339,7 @@ export function ScorecardPage() {
           )}
 
           <div className={styles.matchInfo}>
-            <Caption1><span className={styles.metaLabel}>Date:</span> {match.matchDate}</Caption1>
+            <Caption1><span className={styles.metaLabel}>Date:</span> {formatDateMdY(match.matchDate)}</Caption1>
             <Caption1><span className={styles.metaLabel}>Course Rating:</span> {match.course.courseRating}</Caption1>
             <Caption1><span className={styles.metaLabel}>Slope:</span> {match.course.slopeRating}</Caption1>
             <Caption1><span className={styles.metaLabel}>Par:</span> {match.course.par}</Caption1>
@@ -414,6 +417,21 @@ export function ScorecardPage() {
                 >
                   View Scorecard
                 </Button>
+                <Button
+                  appearance="outline"
+                  icon={<Archive24Regular />}
+                  onClick={() => setArchiveOpen(true)}
+                >
+                  Archive
+                </Button>
+                <Button
+                  appearance="subtle"
+                  className={styles.deleteBtn}
+                  icon={<Delete24Regular />}
+                  onClick={() => setDeleteOpen(true)}
+                >
+                  Delete
+                </Button>
               </>
             )}
           </div>
@@ -445,6 +463,38 @@ export function ScorecardPage() {
                     style={{ backgroundColor: '#a33e3e', borderColor: '#a33e3e', color: '#fff' }}
                   >
                     Delete Match
+                  </Button>
+                </DialogActions>
+              </DialogBody>
+            </DialogSurface>
+          </Dialog>
+
+          <Dialog open={archiveOpen} onOpenChange={(_, d) => setArchiveOpen(d.open)}>
+            <DialogSurface>
+              <DialogBody>
+                <DialogTitle>Archive this match?</DialogTitle>
+                <DialogContent>
+                  The match will be hidden from the matches list. You can access archived matches later from the archive screen.
+                </DialogContent>
+                <DialogActions>
+                  <DialogTrigger disableButtonEnhancement>
+                    <Button appearance="secondary">Cancel</Button>
+                  </DialogTrigger>
+                  <Button
+                    appearance="primary"
+                    icon={<Archive24Regular />}
+                    onClick={async () => {
+                      try {
+                        await matchService.archive(matchId);
+                        navigate('/');
+                      } catch (err: any) {
+                        setError(err?.response?.data?.error ?? 'Failed to archive match.');
+                      } finally {
+                        setArchiveOpen(false);
+                      }
+                    }}
+                  >
+                    Archive Match
                   </Button>
                 </DialogActions>
               </DialogBody>

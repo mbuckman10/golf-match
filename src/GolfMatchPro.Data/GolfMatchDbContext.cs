@@ -58,6 +58,9 @@ public class GolfMatchDbContext : DbContext
         modelBuilder.Entity<Match>(e =>
         {
             e.HasKey(m => m.MatchId);
+            e.Property(m => m.MatchName)
+                .IsRequired()
+                .HasMaxLength(150);
             e.HasOne(m => m.Course)
                 .WithMany()
                 .HasForeignKey(m => m.CourseId)

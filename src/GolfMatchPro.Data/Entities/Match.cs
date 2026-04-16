@@ -7,6 +7,10 @@ public class Match
 {
     public int MatchId { get; set; }
 
+    [Required]
+    [MaxLength(150)]
+    public string MatchName { get; set; } = string.Empty;
+
     public int CourseId { get; set; }
     public Course Course { get; set; } = null!;
 
@@ -16,6 +20,8 @@ public class Match
 
     public int CreatedByPlayerId { get; set; }
     public Player CreatedBy { get; set; } = null!;
+
+    public bool IsArchived { get; set; } = false;
 
     public ICollection<MatchScore> Scores { get; set; } = [];
     public ICollection<BetConfiguration> Bets { get; set; } = [];

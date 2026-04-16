@@ -4,6 +4,7 @@ using GolfMatchPro.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GolfMatchPro.Data.Migrations
 {
     [DbContext(typeof(GolfMatchDbContext))]
-    partial class GolfMatchDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260416172321_AddMatchNameToMatch")]
+    partial class AddMatchNameToMatch
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -324,9 +327,6 @@ namespace GolfMatchPro.Data.Migrations
 
                     b.Property<int>("CreatedByPlayerId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("IsArchived")
-                        .HasColumnType("bit");
 
                     b.Property<DateOnly>("MatchDate")
                         .HasColumnType("date");

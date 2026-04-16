@@ -10,8 +10,10 @@ public static class TeamScoreCalculator
     {
         if (playerNetScores.Count == 0)
             throw new ArgumentException("Must provide at least one player's scores.");
-        if (scoresCountingPerHole > playerNetScores.Count)
-            throw new ArgumentException("Scores counting per hole cannot exceed number of players.");
+
+        // In real rounds, a team can temporarily have fewer posted/valid players than configured.
+        // Clamp counting so results still compute instead of failing the whole bet.
+        int effectiveCount = Math.Clamp(scoresCountingPerHole, 1, playerNetScores.Count);
 
         var teamScores = new int[18];
 
@@ -23,16 +25,8 @@ public static class TeamScoreCalculator
                 holeScores.Add(playerScores[hole]);
             }
 
-            if (holeScores.Count >= scoresCountingPerHole)
-            {
-                holeScores.Sort();
-                teamScores[hole] = holeScores.Take(scoresCountingPerHole).Sum();
-            }
-            else
-            {
-                // Not enough scores yet — use what we have
-                teamScores[hole] = holeScores.Sum();
-            }
+            holeScores.Sort();
+            teamScores[hole] = holeScores.Take(effectiveCount).Sum();
         }
 
         return teamScores;

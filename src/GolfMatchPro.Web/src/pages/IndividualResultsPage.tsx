@@ -21,7 +21,7 @@ import {
   Tab,
   TabList,
 } from '@fluentui/react-components';
-import { ArrowLeft24Regular, Save24Regular } from '@fluentui/react-icons';
+import { Dismiss24Regular, Save24Regular } from '@fluentui/react-icons';
 import { betService } from '../services/betService';
 import { matchService } from '../services/matchService';
 import type { IndividualBetResultsDto, BetConfigurationDto, MatchDetailDto } from '../types';
@@ -41,6 +41,7 @@ export function IndividualResultsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<ResultTab>('matchups');
+  const backToBetsTabRoute = `/matches/${matchId}/scorecard?tab=bets`;
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -80,12 +81,40 @@ export function IndividualResultsPage() {
   const fmtColor = (n: number) => (n > 0 ? 'var(--golf-success)' : n < 0 ? 'var(--golf-danger)' : undefined);
 
   if (loading) return <Spinner label="Loading results..." />;
-  if (!match || !bet || !results) return <Body1>Not found</Body1>;
+  if (!match || !bet || !results) {
+    return (
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: tokens.spacingVerticalL }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalL }}>
+          <Button
+            icon={<Dismiss24Regular />}
+            appearance="subtle"
+            aria-label="Close results"
+            onClick={() => navigate(backToBetsTabRoute)}
+          />
+          <Title2>Individual Bet Results</Title2>
+        </div>
+
+        <MessageBar intent="error" style={{ marginBottom: tokens.spacingVerticalM }}>
+          <MessageBarBody>{error ?? 'Not found.'}</MessageBarBody>
+        </MessageBar>
+
+        <div style={{ display: 'flex', gap: tokens.spacingHorizontalM }}>
+          <Button appearance="primary" onClick={loadData}>Retry</Button>
+          <Button onClick={() => navigate(backToBetsTabRoute)}>Back to Bets</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: 1000, margin: '0 auto', padding: tokens.spacingVerticalL }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalL }}>
-        <Button icon={<ArrowLeft24Regular />} appearance="subtle" onClick={() => navigate(`/matches/${matchId}/bets`)} />
+        <Button
+          icon={<Dismiss24Regular />}
+          appearance="subtle"
+          aria-label="Close results"
+          onClick={() => navigate(backToBetsTabRoute)}
+        />
         <Title2>Individual Bet Results</Title2>
         <Badge appearance="outline">
           {bet.competitionType}

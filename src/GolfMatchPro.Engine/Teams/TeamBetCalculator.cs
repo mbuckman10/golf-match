@@ -101,17 +101,18 @@ public class TeamBetCalculator : ITeamBetCalculator
     public TeamBetResults Calculate(TeamBetConfig config, List<TeamData> teams)
     {
         var results = new TeamBetResults();
-        if (teams.Count < 2) return results;
+        var activeTeams = teams.Where(t => t.Players.Count > 0).ToList();
+        if (activeTeams.Count < 2) return results;
 
         // 1. Compute playing handicaps and net scores for all players
-        int lowestCH = teams.SelectMany(t => t.Players).Min(p => p.CourseHandicap);
+        int lowestCH = activeTeams.SelectMany(t => t.Players).Min(p => p.CourseHandicap);
         decimal pctUsed = config.HandicapPercentage / 100m;
 
         var teamPlayerNetScores = new Dictionary<int, List<int[]>>(); // teamNumber -> list of player net scores
         var teamPlayerGrossScores = new Dictionary<int, List<int[]>>();
         var teamPlayerHandicapStrokes = new Dictionary<int, List<int[]>>();
 
-        foreach (var team in teams)
+        foreach (var team in activeTeams)
         {
             var netScoresList = new List<int[]>();
             var grossScoresList = new List<int[]>();
@@ -142,7 +143,7 @@ public class TeamBetCalculator : ITeamBetCalculator
 
         // 2. Compute team hole scores (best N of M)
         var teamHoleScores = new Dictionary<int, int[]>();
-        foreach (var team in teams)
+        foreach (var team in activeTeams)
         {
             teamHoleScores[team.TeamNumber] = TeamScoreCalculator.ComputeTeamHoleScores(
                 teamPlayerNetScores[team.TeamNumber], config.ScoresCountingPerHole);
@@ -150,7 +151,7 @@ public class TeamBetCalculator : ITeamBetCalculator
 
         // 3. Compute investments per team
         var teamInvestments = new Dictionary<int, InvestmentResult>();
-        foreach (var team in teams)
+        foreach (var team in activeTeams)
         {
             teamInvestments[team.TeamNumber] = InvestmentCalculator.Evaluate(
                 teamPlayerGrossScores[team.TeamNumber],
@@ -163,7 +164,7 @@ public class TeamBetCalculator : ITeamBetCalculator
 
         // 4. Compute total strokes per team
         var teamNetTotals = new Dictionary<int, int>();
-        foreach (var team in teams)
+        foreach (var team in activeTeams)
         {
             var grossTotals = team.Players.Select(p => p.GrossScores.Where(s => s > 0).Sum()).ToArray();
             var courseHandicaps = team.Players.Select(p => p.CourseHandicap).ToArray();
@@ -172,16 +173,16 @@ public class TeamBetCalculator : ITeamBetCalculator
         }
 
         // 5. Initialize per-team accumulators
-        var teamAmounts = teams.ToDictionary(t => t.TeamNumber, _ => new TeamAmounts());
-        int opposingCount = teams.Count - 1;
+        var teamAmounts = activeTeams.ToDictionary(t => t.TeamNumber, _ => new TeamAmounts());
+        int opposingCount = activeTeams.Count - 1;
 
         // 6. Compute pairwise matchups
-        for (int i = 0; i < teams.Count; i++)
+        for (int i = 0; i < activeTeams.Count; i++)
         {
-            for (int j = i + 1; j < teams.Count; j++)
+            for (int j = i + 1; j < activeTeams.Count; j++)
             {
-                var teamA = teams[i];
-                var teamB = teams[j];
+                var teamA = activeTeams[i];
+                var teamB = activeTeams[j];
 
                 NassauResult nassau = config.CompetitionType == CompetitionType.MatchPlay
                     ? _nassauCalc.CalculateMatchPlay(teamHoleScores[teamA.TeamNumber], teamHoleScores[teamB.TeamNumber])
@@ -226,7 +227,7 @@ public class TeamBetCalculator : ITeamBetCalculator
         }
 
         // 7. Compute investment amounts per team
-        foreach (var team in teams)
+        foreach (var team in activeTeams)
         {
             decimal invAmount = InvestmentCalculator.CalculateAmount(
                 teamInvestments[team.TeamNumber],
@@ -246,7 +247,7 @@ public class TeamBetCalculator : ITeamBetCalculator
         }
 
         // 8. Build team results
-        foreach (var team in teams)
+        foreach (var team in activeTeams)
         {
             var amt = teamAmounts[team.TeamNumber];
             decimal grand = amt.Nassau + amt.Investment + amt.TotalStrokes;
@@ -270,7 +271,7 @@ public class TeamBetCalculator : ITeamBetCalculator
         }
 
         // 9. Build per-player results (split evenly among team members)
-        foreach (var team in teams)
+        foreach (var team in activeTeams)
         {
             var teamResult = results.TeamResults.First(t => t.TeamNumber == team.TeamNumber);
             int playerCount = team.Players.Count;

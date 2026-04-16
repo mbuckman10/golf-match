@@ -20,7 +20,7 @@ import {
   Tab,
   TabList,
 } from '@fluentui/react-components';
-import { ArrowLeft24Regular, Save24Regular } from '@fluentui/react-icons';
+import { Dismiss24Regular, Save24Regular } from '@fluentui/react-icons';
 import { betService } from '../services/betService';
 import { matchService } from '../services/matchService';
 import type {
@@ -45,6 +45,7 @@ export function TournamentResultsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<DivisionTab>('leaderboard');
+  const backToBetsTabRoute = `/matches/${matchId}/scorecard?tab=bets`;
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -83,7 +84,30 @@ export function TournamentResultsPage() {
   const fmt = (n: number) => (n >= 0 ? `$${n.toFixed(2)}` : `-$${Math.abs(n).toFixed(2)}`);
 
   if (loading) return <Spinner label="Loading tournament results..." />;
-  if (!match || !bet || !results) return <Body1>Not found</Body1>;
+  if (!match || !bet || !results) {
+    return (
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: tokens.spacingVerticalL }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalL }}>
+          <Button
+            icon={<Dismiss24Regular />}
+            appearance="subtle"
+            aria-label="Close results"
+            onClick={() => navigate(backToBetsTabRoute)}
+          />
+          <Title2>Tournament Results</Title2>
+        </div>
+
+        <MessageBar intent="error" style={{ marginBottom: tokens.spacingVerticalM }}>
+          <MessageBarBody>{error ?? 'Not found.'}</MessageBarBody>
+        </MessageBar>
+
+        <div style={{ display: 'flex', gap: tokens.spacingHorizontalM }}>
+          <Button appearance="primary" onClick={loadData}>Retry</Button>
+          <Button onClick={() => navigate(backToBetsTabRoute)}>Back to Bets</Button>
+        </div>
+      </div>
+    );
+  }
 
   const renderDivision = (division: TournamentDivisionResultDto) => (
     <Card style={{ padding: tokens.spacingVerticalM }}>
@@ -116,7 +140,12 @@ export function TournamentResultsPage() {
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: tokens.spacingVerticalL }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalL }}>
-        <Button icon={<ArrowLeft24Regular />} appearance="subtle" onClick={() => navigate(`/matches/${matchId}/bets`)} />
+        <Button
+          icon={<Dismiss24Regular />}
+          appearance="subtle"
+          aria-label="Close results"
+          onClick={() => navigate(backToBetsTabRoute)}
+        />
         <Title2>Tournament Results</Title2>
         <Badge appearance="outline">{bet.betType}</Badge>
       </div>

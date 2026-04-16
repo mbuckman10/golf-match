@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   makeStyles,
   tokens,
@@ -23,7 +23,7 @@ import {
   DialogContent,
   DialogActions,
 } from '@fluentui/react-components';
-import { ArrowLeft24Regular, Play24Regular, Checkmark24Regular, Delete24Regular, Money24Regular } from '@fluentui/react-icons';
+import { ArrowLeft24Regular, Play24Regular, Checkmark24Regular, Delete24Regular } from '@fluentui/react-icons';
 import type { MatchDetailDto, MatchScoreDto, CourseHoleDto } from '../types';
 import { matchService } from '../services/matchService';
 import { startConnection, joinMatch, leaveMatch, onScoreUpdated, offScoreUpdated } from '../services/signalRService';
@@ -31,6 +31,7 @@ import { HoleSelector } from '../components/HoleSelector';
 import { ScoreInput } from '../components/ScoreInput';
 import { RunningTotals } from '../components/RunningTotals';
 import { ScoreGrid } from '../components/ScoreGrid';
+import { BetConfigPage } from './BetConfigPage';
 import { MessageBar, MessageBarBody } from '@fluentui/react-components';
 import { annotate } from 'rough-notation';
 
@@ -146,6 +147,7 @@ const useStyles = makeStyles({
 export function ScorecardPage() {
   const styles = useStyles();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { id } = useParams();
   const matchId = Number(id);
 
@@ -157,6 +159,8 @@ export function ScorecardPage() {
   const [saving, setSaving] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const requestedTab = searchParams.get('tab');
 
   const statusColor: Record<string, 'success' | 'warning' | 'informative'> = {
     Setup: 'informative',
@@ -174,6 +178,7 @@ export function ScorecardPage() {
   matchRef.current = match;
 
   const detailsTabRef = useRef<HTMLButtonElement | null>(null);
+  const betsTabRef = useRef<HTMLButtonElement | null>(null);
   const entryTabRef = useRef<HTMLButtonElement | null>(null);
   const gridTabRef = useRef<HTMLButtonElement | null>(null);
   const tabAnnotationRef = useRef<ReturnType<typeof annotate> | null>(null);
@@ -197,6 +202,13 @@ export function ScorecardPage() {
   }, [loadMatch]);
 
   useEffect(() => {
+    if (!requestedTab) return;
+    if (requestedTab === 'details' || requestedTab === 'bets' || requestedTab === 'entry' || requestedTab === 'grid') {
+      setTab(requestedTab);
+    }
+  }, [requestedTab]);
+
+  useEffect(() => {
     if (tabAnnotationRef.current) {
       tabAnnotationRef.current.remove();
       tabAnnotationRef.current = null;
@@ -205,9 +217,13 @@ export function ScorecardPage() {
     const target =
       tab === 'details'
         ? detailsTabRef.current
+        : tab === 'bets'
+          ? betsTabRef.current
         : tab === 'entry'
           ? entryTabRef.current
-          : gridTabRef.current;
+          : tab === 'grid'
+            ? gridTabRef.current
+            : null;
 
     if (!target) return;
 
@@ -298,11 +314,18 @@ export function ScorecardPage() {
         )}
       </div>
 
-      <TabList selectedValue={tab} onTabSelect={(_, d) => setTab(d.value as string)} className={styles.tabList}>
+      <TabList
+        selectedValue={tab}
+        onTabSelect={(_, d) => setTab(d.value as string)}
+        className={styles.tabList}
+      >
         <Tab value="details" ref={detailsTabRef}>Match Details</Tab>
+        <Tab value="bets" ref={betsTabRef}>Bets</Tab>
         <Tab value="entry" ref={entryTabRef}>Score Entry</Tab>
         <Tab value="grid" ref={gridTabRef}>Full Grid</Tab>
       </TabList>
+
+      {tab === 'bets' && <BetConfigPage embedded />}
 
       {tab === 'details' && match && (
         <div className={styles.matchRoot}>
@@ -366,13 +389,6 @@ export function ScorecardPage() {
                 </Button>
                 <Button
                   appearance="outline"
-                  icon={<Money24Regular />}
-                  onClick={() => navigate(`/matches/${matchId}/bets`)}
-                >
-                  Bets
-                </Button>
-                <Button
-                  appearance="outline"
                   icon={<Checkmark24Regular />}
                   onClick={() => {
                     matchService.updateStatus(matchId, 'Completed').then(() => loadMatch()).catch(() => setError('Failed to complete match'));
@@ -397,13 +413,6 @@ export function ScorecardPage() {
                   onClick={() => setTab('entry')}
                 >
                   View Scorecard
-                </Button>
-                <Button
-                  appearance="outline"
-                  icon={<Money24Regular />}
-                  onClick={() => navigate(`/matches/${matchId}/bets`)}
-                >
-                  Bets & Results
                 </Button>
               </>
             )}

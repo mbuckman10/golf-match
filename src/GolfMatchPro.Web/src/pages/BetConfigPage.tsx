@@ -41,6 +41,10 @@ import type {
   TournamentConfigJsonDto,
 } from '../types';
 
+type BetConfigPageProps = {
+  embedded?: boolean;
+};
+
 const BET_TYPES: BetType[] = ['Foursome', 'Threesome', 'Fivesome', 'BestBall', 'Individual', 'Skins', 'IndoTournament'];
 const BET_TYPE_LABELS: Record<BetType, string> = {
   Foursome: 'Foursome',
@@ -206,7 +210,7 @@ const useStyles = makeStyles({
   },
 });
 
-export function BetConfigPage() {
+export function BetConfigPage({ embedded = false }: BetConfigPageProps) {
   const styles = useStyles();
   const { id: matchIdStr } = useParams<{ id: string }>();
   const matchId = Number(matchIdStr);
@@ -342,16 +346,20 @@ export function BetConfigPage() {
 
       if (requiresTeams(form.betType)) {
         // Save teams
-        // First delete existing teams
-        for (const existingTeam of bet.teams) {
+        // Always fetch persisted teams first; update/create responses may not include full team graph.
+        const existingTeams = await betService.getTeams(matchId, bet.betConfigId);
+        for (const existingTeam of existingTeams) {
           await betService.deleteTeam(matchId, bet.betConfigId, existingTeam.teamId);
         }
         // Create new teams
         for (const ta of teamAssignments) {
+          const players = ta.players.filter((p) => p.playerId > 0);
+          if (players.length === 0) continue;
+
           const teamReq: CreateTeamRequest = {
             teamNumber: ta.teamNumber,
             teamName: ta.teamName,
-            players: ta.players,
+            players,
           };
           await betService.createTeam(matchId, bet.betConfigId, teamReq);
         }
@@ -572,12 +580,14 @@ export function BetConfigPage() {
   const showForm = isFormOpen;
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: tokens.spacingVerticalL }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalL }}>
-        <Button icon={<ArrowLeft24Regular />} appearance="subtle" onClick={() => navigate(`/matches/${matchId}/scorecard`)} />
-        <Title2>Bet Configuration</Title2>
-        <Badge appearance="outline">{match.scores.length} players</Badge>
-      </div>
+    <div style={{ maxWidth: embedded ? undefined : 900, margin: embedded ? 0 : '0 auto', padding: embedded ? 0 : tokens.spacingVerticalL }}>
+      {!embedded && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalL }}>
+          <Button icon={<ArrowLeft24Regular />} appearance="subtle" onClick={() => navigate(`/matches/${matchId}/scorecard`)} />
+          <Title2>Bet Configuration</Title2>
+          <Badge appearance="outline">{match.scores.length} players</Badge>
+        </div>
+      )}
 
       {error && (
         <MessageBar intent="error" style={{ marginBottom: tokens.spacingVerticalM }}>

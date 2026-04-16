@@ -135,7 +135,7 @@ export function MatchDetailPage() {
         <Button
           appearance="subtle"
           icon={<ArrowLeft24Regular />}
-          onClick={() => navigate('/matches')}
+          onClick={() => navigate('/')}
         />
         <Title1>{match.course.name}</Title1>
         <Badge appearance="filled" color={statusColor[match.status]}>

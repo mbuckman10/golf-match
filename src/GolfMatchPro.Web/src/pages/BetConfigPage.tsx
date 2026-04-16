@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
+  makeStyles,
   Title2,
   Body1,
   Button,
@@ -8,7 +9,8 @@ import {
   CardHeader,
   Input,
   Label,
-  Select,
+  Dropdown,
+  Option,
   Switch,
   Spinner,
   tokens,
@@ -16,6 +18,13 @@ import {
   Badge,
   MessageBar,
   MessageBarBody,
+  Dialog,
+  DialogSurface,
+  DialogTitle,
+  DialogBody,
+  DialogContent,
+  DialogActions,
+  DialogTrigger,
 } from '@fluentui/react-components';
 import { Add24Regular, Delete24Regular, ArrowLeft24Regular, Save24Regular } from '@fluentui/react-icons';
 import { betService } from '../services/betService';
@@ -33,7 +42,21 @@ import type {
 } from '../types';
 
 const BET_TYPES: BetType[] = ['Foursome', 'Threesome', 'Fivesome', 'BestBall', 'Individual', 'Skins', 'IndoTournament'];
+const BET_TYPE_LABELS: Record<BetType, string> = {
+  Foursome: 'Foursome',
+  Threesome: 'Threesome',
+  Fivesome: 'Fivesome',
+  BestBall: 'Best Ball',
+  Individual: 'Individual',
+  Skins: 'Skins',
+  IndoTournament: 'Indo Tournament',
+  RoundRobin: 'Round Robin',
+};
 const COMPETITION_TYPES: CompetitionType[] = ['MatchPlay', 'MedalPlay'];
+const COMPETITION_TYPE_LABELS: Record<CompetitionType, string> = {
+  MatchPlay: 'Match Play',
+  MedalPlay: 'Medal Play',
+};
 const TEAM_POSITIONS: TeamPosition[] = ['Captain', 'B', 'C', 'D', 'E'];
 
 const DEFAULT_COUNTS: Record<BetType, number> = {
@@ -58,7 +81,133 @@ const TEAM_SIZES: Record<BetType, number> = {
   RoundRobin: 1,
 };
 
+const useStyles = makeStyles({
+  fieldControl: {
+    '--colorCompoundBrandStroke': 'var(--golf-green-500)',
+    '--colorCompoundBrandStrokeHover': 'var(--golf-green-600)',
+    '--colorCompoundBrandStrokePressed': 'var(--golf-green-700)',
+    '--colorStrokeFocus2': 'var(--golf-green-500)',
+    backgroundColor: '#fffdf8',
+    minHeight: '32px',
+    ':hover': {
+      backgroundColor: '#fffefb',
+      boxShadow: 'inset 0 0 0 1px rgba(43,130,80,0.28)',
+    },
+    ':focus-within': {
+      backgroundColor: '#fffefb',
+      boxShadow: '0 0 0 2px rgba(43,130,80,0.18)',
+    },
+    '& input:focus': {
+      outlineColor: 'var(--golf-green-500)',
+    },
+    '& select:focus': {
+      outlineColor: 'var(--golf-green-500)',
+    },
+  },
+  dropdownListbox: {
+    backgroundColor: '#fffefb',
+    border: '1px solid var(--golf-creme-300)',
+    '& [role="option"]': {
+      color: 'var(--golf-ink)',
+    },
+    '& [role="option"]:hover': {
+      backgroundColor: 'var(--golf-creme-50)',
+    },
+    '& [role="option"][aria-selected="true"]': {
+      backgroundColor: 'var(--golf-green-100)',
+      color: 'var(--golf-green-700)',
+      fontWeight: 600,
+    },
+    '& [role="option"][aria-selected="true"]:hover': {
+      backgroundColor: 'var(--golf-green-200)',
+    },
+  },
+  addTeamButton: {
+    '--colorNeutralBackground1': '#fffdf8',
+    '--colorNeutralBackground1Hover': 'var(--golf-green-100)',
+    '--colorNeutralBackground1Pressed': 'var(--golf-green-200)',
+    '--colorNeutralStroke1': 'var(--golf-green-500)',
+    '--colorNeutralStroke1Hover': 'var(--golf-green-600)',
+    '--colorNeutralStroke1Pressed': 'var(--golf-green-700)',
+    '--colorNeutralForeground1': 'var(--golf-green-700)',
+    '--colorNeutralForeground1Hover': 'var(--golf-green-800)',
+    '--colorNeutralForeground1Pressed': 'var(--golf-green-800)',
+    marginBottom: tokens.spacingVerticalM,
+    minHeight: '40px',
+    paddingLeft: tokens.spacingHorizontalM,
+    paddingRight: tokens.spacingHorizontalM,
+    backgroundColor: '#fffdf8',
+    border: '1px solid var(--golf-green-500)',
+    color: 'var(--golf-green-700)',
+    fontWeight: '600',
+    ':hover': {
+      backgroundColor: 'var(--golf-green-100)',
+      borderColor: 'var(--golf-green-600)',
+      color: 'var(--golf-green-800)',
+    },
+    ':active': {
+      backgroundColor: 'var(--golf-green-200)',
+      borderColor: 'var(--golf-green-700)',
+      color: 'var(--golf-green-800)',
+    },
+  },
+  addPlayerButton: {
+    '--colorNeutralBackground1': '#fffefb',
+    '--colorNeutralBackground1Hover': 'var(--golf-green-100)',
+    '--colorNeutralBackground1Pressed': 'var(--golf-green-200)',
+    '--colorNeutralStroke1': 'var(--golf-green-400)',
+    '--colorNeutralStroke1Hover': 'var(--golf-green-600)',
+    '--colorNeutralStroke1Pressed': 'var(--golf-green-700)',
+    '--colorNeutralForeground1': 'var(--golf-green-700)',
+    '--colorNeutralForeground1Hover': 'var(--golf-green-800)',
+    '--colorNeutralForeground1Pressed': 'var(--golf-green-800)',
+    backgroundColor: '#fffefb',
+    border: '1px solid var(--golf-green-500)',
+    color: 'var(--golf-green-700)',
+    minHeight: '32px',
+    fontWeight: '600',
+    ':hover': {
+      backgroundColor: 'var(--golf-green-100)',
+      borderColor: 'var(--golf-green-700)',
+      color: 'var(--golf-green-800)',
+      boxShadow: 'inset 0 0 0 1px rgba(43,130,80,0.32)',
+    },
+    ':active': {
+      backgroundColor: 'var(--golf-green-200)',
+      borderColor: 'var(--golf-green-800)',
+      color: 'var(--golf-green-900)',
+      boxShadow: 'inset 0 0 0 1px rgba(43,130,80,0.4)',
+    },
+  },
+  teamNameInput: {
+    '--colorCompoundBrandStroke': 'var(--golf-green-700)',
+    '--colorCompoundBrandStrokeHover': 'var(--golf-green-800)',
+    '--colorCompoundBrandStrokePressed': 'var(--golf-green-900)',
+    '--colorStrokeFocus2': 'var(--golf-green-700)',
+    backgroundColor: '#fffdf8',
+    boxShadow: 'inset 0 0 0 1px rgba(43, 130, 80, 0.24)',
+    borderRadius: '8px',
+    minHeight: '40px',
+    '& input, & .fui-Input__input': {
+      fontSize: '18px',
+      fontWeight: 900,
+      letterSpacing: '0.015em',
+      lineHeight: '24px',
+      color: 'var(--golf-green-900)',
+    },
+    ':hover': {
+      backgroundColor: '#fffefb',
+      boxShadow: 'inset 0 0 0 1px rgba(43, 130, 80, 0.32)',
+    },
+    ':focus-within': {
+      backgroundColor: '#fffefb',
+      boxShadow: 'inset 0 0 0 1px var(--golf-green-700), 0 0 0 2px rgba(43,130,80,0.18)',
+    },
+  },
+});
+
 export function BetConfigPage() {
+  const styles = useStyles();
   const { id: matchIdStr } = useParams<{ id: string }>();
   const matchId = Number(matchIdStr);
   const navigate = useNavigate();
@@ -69,6 +218,8 @@ export function BetConfigPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   // Form state for new/editing bet
   const [editingBetId, setEditingBetId] = useState<number | null>(null);
@@ -117,6 +268,8 @@ export function BetConfigPage() {
   const [teamAssignments, setTeamAssignments] = useState<
     { teamNumber: number; teamName: string; players: { playerId: number; position: TeamPosition }[] }[]
   >([]);
+
+  const fieldStackStyle = { display: 'flex', flexDirection: 'column', gap: 4 } as const;
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -206,6 +359,7 @@ export function BetConfigPage() {
 
       setSuccess('Bet configuration saved!');
       setEditingBetId(null);
+      setIsFormOpen(false);
       await loadData();
     } catch {
       setError('Failed to save bet configuration');
@@ -224,6 +378,7 @@ export function BetConfigPage() {
   };
 
   const handleEditBet = (bet: BetConfigurationDto) => {
+    setIsFormOpen(true);
     setEditingBetId(bet.betConfigId);
     setForm({
       betType: bet.betType,
@@ -303,6 +458,7 @@ export function BetConfigPage() {
   };
 
   const handleNewBet = () => {
+    setIsFormOpen(true);
     setEditingBetId(null);
     setForm({
       betType: 'Foursome',
@@ -346,6 +502,17 @@ export function BetConfigPage() {
         { place: 3, percent: 20 },
       ],
     });
+  };
+
+  const handleCancelForm = () => {
+    setCancelOpen(true);
+  };
+
+  const confirmCancelForm = () => {
+    setIsFormOpen(false);
+    setEditingBetId(null);
+    setError(null);
+    setCancelOpen(false);
   };
 
   const updateTeamPlayer = (teamIdx: number, playerIdx: number, playerId: number) => {
@@ -393,15 +560,21 @@ export function BetConfigPage() {
     });
   };
 
+  const getPlayerLabel = (playerId: number) => {
+    if (playerId === 0) return 'Select player...';
+    const player = match?.scores.find((s) => s.playerId === playerId);
+    return player ? `${player.playerName} (CH: ${player.courseHandicap})` : 'Select player...';
+  };
+
   if (loading) return <Spinner label="Loading..." />;
   if (!match) return <Body1>Match not found</Body1>;
 
-  const showForm = editingBetId !== null || editingBetId === null;
+  const showForm = isFormOpen;
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: tokens.spacingVerticalL }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalL }}>
-        <Button icon={<ArrowLeft24Regular />} appearance="subtle" onClick={() => navigate(`/matches/${matchId}`)} />
+        <Button icon={<ArrowLeft24Regular />} appearance="subtle" onClick={() => navigate(`/matches/${matchId}/scorecard`)} />
         <Title2>Bet Configuration</Title2>
         <Badge appearance="outline">{match.scores.length} players</Badge>
       </div>
@@ -427,7 +600,7 @@ export function BetConfigPage() {
                 header={
                   <Body1>
                     <strong>
-                      {bet.betType} — {bet.competitionType}
+                      {BET_TYPE_LABELS[bet.betType]} — {COMPETITION_TYPE_LABELS[bet.competitionType]}
                     </strong>{' '}
                     | Nassau: ${bet.nassauFront}/${bet.nassauBack}/${bet.nassau18} | {bet.teams.length} teams
                   </Body1>
@@ -461,15 +634,45 @@ export function BetConfigPage() {
       )}
 
       <div style={{ display: 'flex', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalM }}>
-        <Button appearance="primary" icon={<Add24Regular />} onClick={handleNewBet}>
-          New Bet
-        </Button>
+        {!showForm && (
+          <Button appearance="primary" icon={<Add24Regular />} onClick={handleNewBet}>
+            New Bet
+          </Button>
+        )}
+        {showForm && (
+          <Button appearance="secondary" onClick={handleCancelForm}>
+            Cancel
+          </Button>
+        )}
         {bets.some((b) => b.betType === 'BestBall') && (
           <Button appearance="secondary" onClick={() => navigate(`/matches/${matchId}/bestball-summary`)}>
             BB W/L Summary
           </Button>
         )}
       </div>
+
+      <Dialog open={cancelOpen} onOpenChange={(_, d) => setCancelOpen(d.open)}>
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle>Discard changes?</DialogTitle>
+            <DialogContent>
+              Any unsaved changes to this bet configuration will be lost.
+            </DialogContent>
+            <DialogActions>
+              <DialogTrigger disableButtonEnhancement>
+                <Button appearance="secondary">Keep Editing</Button>
+              </DialogTrigger>
+              <Button
+                appearance="primary"
+                onClick={confirmCancelForm}
+                style={{ backgroundColor: '#a33e3e', borderColor: '#a33e3e', color: '#fff' }}
+              >
+                Discard Changes
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
 
       {showForm && (
         <Card style={{ padding: tokens.spacingVerticalL }}>
@@ -479,25 +682,41 @@ export function BetConfigPage() {
 
           {/* Row 1: Type + Competition */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalM }}>
-            <div>
+            <div style={fieldStackStyle}>
               <Label>Bet Type</Label>
-              <Select value={form.betType} onChange={(_, d) => handleFormChange('betType', d.value as BetType)}>
+              <Dropdown
+                className={styles.fieldControl}
+                selectedOptions={[form.betType]}
+                value={BET_TYPE_LABELS[form.betType]}
+                listbox={{ className: styles.dropdownListbox }}
+                onOptionSelect={(_, d) => {
+                  if (d.optionValue) handleFormChange('betType', d.optionValue as BetType);
+                }}
+              >
                 {BET_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
+                  <Option key={t} value={t}>
+                    {BET_TYPE_LABELS[t]}
+                  </Option>
                 ))}
-              </Select>
+              </Dropdown>
             </div>
-            <div>
+            <div style={fieldStackStyle}>
               <Label>Competition Type</Label>
-              <Select value={form.competitionType} onChange={(_, d) => handleFormChange('competitionType', d.value as CompetitionType)}>
+              <Dropdown
+                className={styles.fieldControl}
+                selectedOptions={[form.competitionType]}
+                value={COMPETITION_TYPE_LABELS[form.competitionType]}
+                listbox={{ className: styles.dropdownListbox }}
+                onOptionSelect={(_, d) => {
+                  if (d.optionValue) handleFormChange('competitionType', d.optionValue as CompetitionType);
+                }}
+              >
                 {COMPETITION_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
+                  <Option key={t} value={t}>
+                    {COMPETITION_TYPE_LABELS[t]}
+                  </Option>
                 ))}
-              </Select>
+              </Dropdown>
             </div>
           </div>
 
@@ -505,19 +724,19 @@ export function BetConfigPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalM }}>
             <div>
               <Label>Front 9 ($)</Label>
-              <Input type="number" value={String(form.nassauFront)} onChange={(_, d) => handleFormChange('nassauFront', Number(d.value))} />
+              <Input className={styles.fieldControl} type="number" value={String(form.nassauFront)} onChange={(_, d) => handleFormChange('nassauFront', Number(d.value))} />
             </div>
             <div>
               <Label>Back 9 ($)</Label>
-              <Input type="number" value={String(form.nassauBack)} onChange={(_, d) => handleFormChange('nassauBack', Number(d.value))} />
+              <Input className={styles.fieldControl} type="number" value={String(form.nassauBack)} onChange={(_, d) => handleFormChange('nassauBack', Number(d.value))} />
             </div>
             <div>
               <Label>18-Hole ($)</Label>
-              <Input type="number" value={String(form.nassau18)} onChange={(_, d) => handleFormChange('nassau18', Number(d.value))} />
+              <Input className={styles.fieldControl} type="number" value={String(form.nassau18)} onChange={(_, d) => handleFormChange('nassau18', Number(d.value))} />
             </div>
             <div>
               <Label>Handicap %</Label>
-              <Input type="number" value={String(form.handicapPercentage)} onChange={(_, d) => handleFormChange('handicapPercentage', Number(d.value))} />
+              <Input className={styles.fieldControl} type="number" value={String(form.handicapPercentage)} onChange={(_, d) => handleFormChange('handicapPercentage', Number(d.value))} />
             </div>
           </div>
 
@@ -527,32 +746,32 @@ export function BetConfigPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <Switch label="Off Enabled" checked={form.investmentOffEnabled} onChange={(_, d) => handleFormChange('investmentOffEnabled', d.checked)} />
               {form.investmentOffEnabled && (
-                <Input type="number" value={String(form.investmentOffAmount)} onChange={(_, d) => handleFormChange('investmentOffAmount', Number(d.value))} />
+                <Input className={styles.fieldControl} type="number" value={String(form.investmentOffAmount)} onChange={(_, d) => handleFormChange('investmentOffAmount', Number(d.value))} />
               )}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <Switch label="Redemption" checked={form.redemptionEnabled} onChange={(_, d) => handleFormChange('redemptionEnabled', d.checked)} />
               {form.redemptionEnabled && (
-                <Input type="number" value={String(form.redemptionAmount)} onChange={(_, d) => handleFormChange('redemptionAmount', Number(d.value))} />
+                <Input className={styles.fieldControl} type="number" value={String(form.redemptionAmount)} onChange={(_, d) => handleFormChange('redemptionAmount', Number(d.value))} />
               )}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <Switch label="Dunn" checked={form.dunnEnabled} onChange={(_, d) => handleFormChange('dunnEnabled', d.checked)} />
               {form.dunnEnabled && (
-                <Input type="number" value={String(form.dunnAmount)} onChange={(_, d) => handleFormChange('dunnAmount', Number(d.value))} />
+                <Input className={styles.fieldControl} type="number" value={String(form.dunnAmount)} onChange={(_, d) => handleFormChange('dunnAmount', Number(d.value))} />
               )}
             </div>
           </div>
 
           {/* Expense + Counting */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalM }}>
-            <div>
+            <div style={fieldStackStyle}>
               <Label>Expense Deduction %</Label>
-              <Input type="number" value={String(form.expenseDeductionPct)} onChange={(_, d) => handleFormChange('expenseDeductionPct', Number(d.value))} />
+              <Input className={styles.fieldControl} type="number" value={String(form.expenseDeductionPct)} onChange={(_, d) => handleFormChange('expenseDeductionPct', Number(d.value))} />
             </div>
-            <div>
+            <div style={fieldStackStyle}>
               <Label>Scores Counting Per Hole</Label>
-              <Input type="number" value={String(form.scoresCountingPerHole)} onChange={(_, d) => handleFormChange('scoresCountingPerHole', Number(d.value))} />
+              <Input className={styles.fieldControl} type="number" value={String(form.scoresCountingPerHole)} onChange={(_, d) => handleFormChange('scoresCountingPerHole', Number(d.value))} />
             </div>
           </div>
 
@@ -570,6 +789,7 @@ export function BetConfigPage() {
                 <div>
                   <Label>Buy-In Per Player ($)</Label>
                   <Input
+                    className={styles.fieldControl}
                     type="number"
                     value={form.skinsBuyIn == null ? '' : String(form.skinsBuyIn)}
                     onChange={(_, d) => handleFormChange('skinsBuyIn', d.value === '' ? null : Number(d.value))}
@@ -578,6 +798,7 @@ export function BetConfigPage() {
                 <div>
                   <Label>Amount Per Skin ($)</Label>
                   <Input
+                    className={styles.fieldControl}
                     type="number"
                     value={form.skinsPerSkinAmount == null ? '' : String(form.skinsPerSkinAmount)}
                     onChange={(_, d) => handleFormChange('skinsPerSkinAmount', d.value === '' ? null : Number(d.value))}
@@ -597,6 +818,7 @@ export function BetConfigPage() {
                 <div>
                   <Label>Sponsor Money ($)</Label>
                   <Input
+                    className={styles.fieldControl}
                     type="number"
                     value={String(tournamentConfig.sponsorMoney)}
                     onChange={(_, d) => setTournamentConfig((prev) => ({ ...prev, sponsorMoney: Number(d.value) || 0 }))}
@@ -605,6 +827,7 @@ export function BetConfigPage() {
                 <div>
                   <Label>Buy-In Per Player ($)</Label>
                   <Input
+                    className={styles.fieldControl}
                     type="number"
                     value={String(tournamentConfig.buyInPerPlayer)}
                     onChange={(_, d) => setTournamentConfig((prev) => ({ ...prev, buyInPerPlayer: Number(d.value) || 0 }))}
@@ -613,6 +836,7 @@ export function BetConfigPage() {
                 <div>
                   <Label>Gross / Net Purse %</Label>
                   <Input
+                    className={styles.fieldControl}
                     type="text"
                     value={`${tournamentConfig.grossPursePercent}/${tournamentConfig.netPursePercent}`}
                     readOnly
@@ -633,6 +857,8 @@ export function BetConfigPage() {
                 <Card key={tIdx} style={{ marginBottom: tokens.spacingVerticalS, padding: tokens.spacingVerticalS }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalS }}>
                     <Input
+                      className={styles.teamNameInput}
+                      style={{ width: 210 }}
                       value={team.teamName}
                       onChange={(_, d) => {
                         setTeamAssignments((prev) => {
@@ -641,36 +867,41 @@ export function BetConfigPage() {
                           return next;
                         });
                       }}
-                      style={{ width: 160 }}
                     />
                     <Button size="small" icon={<Delete24Regular />} onClick={() => removeTeam(tIdx)} />
                   </div>
                   {team.players.map((p, pIdx) => (
                     <div key={pIdx} style={{ display: 'flex', gap: tokens.spacingHorizontalS, marginBottom: 4, alignItems: 'center' }}>
-                      <Select
-                        value={String(p.playerId)}
-                        onChange={(_, d) => updateTeamPlayer(tIdx, pIdx, Number(d.value))}
+                      <Dropdown
+                        className={styles.fieldControl}
                         style={{ minWidth: 200 }}
+                        selectedOptions={[String(p.playerId)]}
+                        value={getPlayerLabel(p.playerId)}
+                        listbox={{ className: styles.dropdownListbox }}
+                        onOptionSelect={(_, d) => {
+                          if (!d.optionValue) return;
+                          updateTeamPlayer(tIdx, pIdx, Number(d.optionValue));
+                        }}
                       >
-                        <option value="0">Select player...</option>
+                        <Option value="0">Select player...</Option>
                         {match.scores.map((s) => (
-                          <option key={s.playerId} value={String(s.playerId)}>
+                          <Option key={s.playerId} value={String(s.playerId)}>
                             {s.playerName} (CH: {s.courseHandicap})
-                          </option>
+                          </Option>
                         ))}
-                      </Select>
+                      </Dropdown>
                       <Badge appearance="outline" size="small">
                         {TEAM_POSITIONS[pIdx] ?? 'E'}
                       </Badge>
                       <Button size="small" icon={<Delete24Regular />} onClick={() => removePlayerFromTeam(tIdx, pIdx)} />
                     </div>
                   ))}
-                  <Button size="small" onClick={() => addPlayerToTeam(tIdx)}>
+                  <Button size="small" appearance="secondary" className={styles.addPlayerButton} onClick={() => addPlayerToTeam(tIdx)}>
                     Add Player
                   </Button>
                 </Card>
               ))}
-              <Button size="small" icon={<Add24Regular />} onClick={addTeam} style={{ marginBottom: tokens.spacingVerticalM }}>
+              <Button size="small" appearance="secondary" icon={<Add24Regular />} onClick={addTeam} className={styles.addTeamButton}>
                 Add Team
               </Button>
             </>
@@ -678,7 +909,7 @@ export function BetConfigPage() {
 
           <div style={{ display: 'flex', gap: tokens.spacingHorizontalM, marginTop: tokens.spacingVerticalM }}>
             <Button appearance="primary" icon={<Save24Regular />} onClick={handleSaveBet} disabled={saving}>
-              {saving ? 'Saving...' : 'Save Bet & Teams'}
+              {saving ? 'Saving...' : 'Save Bet'}
             </Button>
           </div>
         </Card>

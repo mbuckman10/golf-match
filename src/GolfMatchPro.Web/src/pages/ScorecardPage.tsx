@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   makeStyles,
+  tokens,
   Title1,
   Title2,
   Button,
@@ -11,8 +12,18 @@ import {
   TabList,
   Dropdown,
   Option,
+  Badge,
+  Caption1,
+  Subtitle2,
+  Dialog,
+  DialogTrigger,
+  DialogSurface,
+  DialogTitle,
+  DialogBody,
+  DialogContent,
+  DialogActions,
 } from '@fluentui/react-components';
-import { ArrowLeft24Regular } from '@fluentui/react-icons';
+import { ArrowLeft24Regular, Play24Regular, Checkmark24Regular, Delete24Regular, Money24Regular } from '@fluentui/react-icons';
 import type { MatchDetailDto, MatchScoreDto, CourseHoleDto } from '../types';
 import { matchService } from '../services/matchService';
 import { startConnection, joinMatch, leaveMatch, onScoreUpdated, offScoreUpdated } from '../services/signalRService';
@@ -20,6 +31,8 @@ import { HoleSelector } from '../components/HoleSelector';
 import { ScoreInput } from '../components/ScoreInput';
 import { RunningTotals } from '../components/RunningTotals';
 import { ScoreGrid } from '../components/ScoreGrid';
+import { MessageBar, MessageBarBody } from '@fluentui/react-components';
+import { annotate } from 'rough-notation';
 
 const useStyles = makeStyles({
   root: {
@@ -61,6 +74,69 @@ const useStyles = makeStyles({
     letterSpacing: '0.02em',
     marginBottom: '-4px',
   },
+  tabList: {
+    overflow: 'visible',
+    marginBottom: '14px',
+    '& [role="tab"]::before': {
+      content: 'none !important',
+      borderBottomColor: 'transparent !important',
+    },
+    '& [role="tab"]::after': {
+      content: 'none !important',
+      borderBottomColor: 'transparent !important',
+    },
+    '& [role="tab"][aria-selected="true"]': {
+      borderBottomColor: 'transparent',
+      color: 'var(--golf-green-700)',
+      overflow: 'visible',
+      boxShadow: 'none',
+    },
+  },
+  matchInfo: {
+    display: 'flex',
+    gap: '24px',
+    flexWrap: 'wrap',
+  },
+  metaLabel: {
+    fontWeight: 600,
+  },
+  playerList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  playerRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '8px 12px',
+    backgroundColor: tokens.colorNeutralBackground2,
+    borderRadius: tokens.borderRadiusMedium,
+  },
+  actions: {
+    display: 'flex',
+    gap: '8px',
+    flexWrap: 'wrap',
+  },
+  deleteBtn: {
+    color: 'var(--golf-ink-soft)',
+    '& svg': { color: 'inherit' },
+    ':hover': {
+      color: 'var(--golf-danger)',
+      backgroundColor: 'rgba(163,62,62,0.08)',
+    },
+    ':hover svg': { color: 'var(--golf-danger)' },
+    ':active': {
+      color: '#7a1f1f',
+      backgroundColor: 'rgba(163,62,62,0.16)',
+    },
+    ':active svg': { color: '#7a1f1f' },
+  },
+  matchRoot: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+  },
 });
 
 export function ScorecardPage() {
@@ -75,9 +151,28 @@ export function ScorecardPage() {
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [tab, setTab] = useState<string>('entry');
   const [saving, setSaving] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const statusColor: Record<string, 'success' | 'warning' | 'informative'> = {
+    Setup: 'informative',
+    InProgress: 'warning',
+    Completed: 'success',
+  };
+
+  const statusLabel: Record<string, string> = {
+    Setup: 'Setup',
+    InProgress: 'In Progress',
+    Completed: 'Completed',
+  };
 
   const matchRef = useRef(match);
   matchRef.current = match;
+
+  const detailsTabRef = useRef<HTMLButtonElement | null>(null);
+  const entryTabRef = useRef<HTMLButtonElement | null>(null);
+  const gridTabRef = useRef<HTMLButtonElement | null>(null);
+  const tabAnnotationRef = useRef<ReturnType<typeof annotate> | null>(null);
 
   const loadMatch = useCallback(async () => {
     try {
@@ -96,6 +191,42 @@ export function ScorecardPage() {
   useEffect(() => {
     loadMatch();
   }, [loadMatch]);
+
+  useEffect(() => {
+    if (tabAnnotationRef.current) {
+      tabAnnotationRef.current.remove();
+      tabAnnotationRef.current = null;
+    }
+
+    const target =
+      tab === 'details'
+        ? detailsTabRef.current
+        : tab === 'entry'
+          ? entryTabRef.current
+          : gridTabRef.current;
+
+    if (!target) return;
+
+    const annotation = annotate(target, {
+      type: 'underline',
+      color: '#1e6a3a',
+      strokeWidth: 2,
+      iterations: 2,
+      multiline: false,
+      padding: [0, -6, -2, -6],
+      animate: false,
+    });
+
+    annotation.show();
+    tabAnnotationRef.current = annotation;
+
+    return () => {
+      if (tabAnnotationRef.current) {
+        tabAnnotationRef.current.remove();
+        tabAnnotationRef.current = null;
+      }
+    };
+  }, [tab, loading, matchId]);
 
   // SignalR connection
   useEffect(() => {
@@ -153,15 +284,161 @@ export function ScorecardPage() {
         <Button
           appearance="subtle"
           icon={<ArrowLeft24Regular />}
-          onClick={() => navigate(`/matches/${matchId}`)}
+          onClick={() => navigate('/matches')}
         />
         <Title1>{match.course.name}</Title1>
+        {match && (
+          <Badge appearance="filled" color={statusColor[match.status]}>
+            {statusLabel[match.status]}
+          </Badge>
+        )}
       </div>
 
-      <TabList selectedValue={tab} onTabSelect={(_, d) => setTab(d.value as string)}>
-        <Tab value="entry">Score Entry</Tab>
-        <Tab value="grid">Full Grid</Tab>
+      <TabList selectedValue={tab} onTabSelect={(_, d) => setTab(d.value as string)} className={styles.tabList}>
+        <Tab value="details" ref={detailsTabRef}>Match Details</Tab>
+        <Tab value="entry" ref={entryTabRef}>Score Entry</Tab>
+        <Tab value="grid" ref={gridTabRef}>Full Grid</Tab>
       </TabList>
+
+      {tab === 'details' && match && (
+        <div className={styles.matchRoot}>
+          {error && (
+            <MessageBar intent="error">
+              <MessageBarBody>{error}</MessageBarBody>
+            </MessageBar>
+          )}
+
+          <div className={styles.matchInfo}>
+            <Caption1><span className={styles.metaLabel}>Date:</span> {match.matchDate}</Caption1>
+            <Caption1><span className={styles.metaLabel}>Course Rating:</span> {match.course.courseRating}</Caption1>
+            <Caption1><span className={styles.metaLabel}>Slope:</span> {match.course.slopeRating}</Caption1>
+            <Caption1><span className={styles.metaLabel}>Par:</span> {match.course.par}</Caption1>
+          </div>
+
+          <Subtitle2>Players ({match.scores.length})</Subtitle2>
+          <div className={styles.playerList}>
+            {match.scores.map(s => (
+              <div key={s.playerId} className={styles.playerRow}>
+                <div>
+                  <Body1><b>{s.playerNickname ?? s.playerName}</b></Body1>
+                  <Caption1> — Course Handicap: {s.courseHandicap}</Caption1>
+                </div>
+                {s.grossTotal > 0 && (
+                  <Caption1>Gross: {s.grossTotal} | Net: {s.netTotal}</Caption1>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className={styles.actions}>
+            {match.status === 'Setup' && (
+              <>
+                <Button
+                  appearance="primary"
+                  icon={<Play24Regular />}
+                  onClick={() => {
+                    matchService.updateStatus(matchId, 'InProgress').then(() => loadMatch()).catch(() => setError('Failed to start match'));
+                  }}
+                >
+                  Start Match
+                </Button>
+                <Button
+                  appearance="subtle"
+                  className={styles.deleteBtn}
+                  icon={<Delete24Regular />}
+                  onClick={() => setDeleteOpen(true)}
+                >
+                  Delete
+                </Button>
+              </>
+            )}
+            {match.status === 'InProgress' && (
+              <>
+                <Button
+                  appearance="primary"
+                  onClick={() => setTab('entry')}
+                >
+                  Open Scorecard
+                </Button>
+                <Button
+                  appearance="outline"
+                  icon={<Money24Regular />}
+                  onClick={() => navigate(`/matches/${matchId}/bets`)}
+                >
+                  Bets
+                </Button>
+                <Button
+                  appearance="outline"
+                  icon={<Checkmark24Regular />}
+                  onClick={() => {
+                    matchService.updateStatus(matchId, 'Completed').then(() => loadMatch()).catch(() => setError('Failed to complete match'));
+                  }}
+                >
+                  Complete Match
+                </Button>
+                <Button
+                  appearance="subtle"
+                  className={styles.deleteBtn}
+                  icon={<Delete24Regular />}
+                  onClick={() => setDeleteOpen(true)}
+                >
+                  Delete
+                </Button>
+              </>
+            )}
+            {match.status === 'Completed' && (
+              <>
+                <Button
+                  appearance="primary"
+                  onClick={() => setTab('entry')}
+                >
+                  View Scorecard
+                </Button>
+                <Button
+                  appearance="outline"
+                  icon={<Money24Regular />}
+                  onClick={() => navigate(`/matches/${matchId}/bets`)}
+                >
+                  Bets & Results
+                </Button>
+              </>
+            )}
+          </div>
+
+          <Dialog open={deleteOpen} onOpenChange={(_, d) => setDeleteOpen(d.open)}>
+            <DialogSurface>
+              <DialogBody>
+                <DialogTitle>Delete this match?</DialogTitle>
+                <DialogContent>
+                  This will permanently remove the match and all associated scores. This cannot be undone.
+                </DialogContent>
+                <DialogActions>
+                  <DialogTrigger disableButtonEnhancement>
+                    <Button appearance="secondary">Cancel</Button>
+                  </DialogTrigger>
+                  <Button
+                    appearance="primary"
+                    onClick={async () => {
+                      try {
+                        await matchService.delete(matchId);
+                        navigate('/');
+                      } catch (err: any) {
+                        setError(err?.response?.data?.error ?? 'Failed to delete match.');
+                      } finally {
+                        setDeleteOpen(false);
+                      }
+                    }}
+                    icon={<Delete24Regular />}
+                    style={{ backgroundColor: '#a33e3e', borderColor: '#a33e3e', color: '#fff' }}
+                  >
+                    Delete Match
+                  </Button>
+                </DialogActions>
+              </DialogBody>
+            </DialogSurface>
+          </Dialog>
+        </div>
+      )}
 
       {tab === 'entry' && (
         <>

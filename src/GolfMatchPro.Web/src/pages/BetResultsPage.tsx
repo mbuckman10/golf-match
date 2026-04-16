@@ -28,6 +28,17 @@ import type { TeamBetResultsDto, BetConfigurationDto, MatchDetailDto } from '../
 
 type ResultTab = 'summary' | 'matchups' | 'players' | 'investments';
 
+const BET_TYPE_LABELS: Record<string, string> = {
+  Foursome: 'Foursome',
+  Threesome: 'Threesome',
+  Fivesome: 'Fivesome',
+  BestBall: 'Best Ball',
+  Individual: 'Individual',
+  Skins: 'Skins',
+  IndoTournament: 'Indo Tournament',
+  RoundRobin: 'Round Robin',
+};
+
 export function BetResultsPage() {
   const { id: matchIdStr, betConfigId: betConfigIdStr } = useParams<{ id: string; betConfigId: string }>();
   const matchId = Number(matchIdStr);
@@ -88,7 +99,7 @@ export function BetResultsPage() {
         <Button icon={<ArrowLeft24Regular />} appearance="subtle" onClick={() => navigate(`/matches/${matchId}/bets`)} />
         <Title2>Results</Title2>
         <Badge appearance="outline">
-          {bet.betType} — {bet.competitionType}
+          {(BET_TYPE_LABELS[bet.betType] ?? bet.betType)} — {bet.competitionType}
         </Badge>
       </div>
 

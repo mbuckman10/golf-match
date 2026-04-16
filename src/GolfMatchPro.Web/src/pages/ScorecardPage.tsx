@@ -287,6 +287,7 @@ export function ScorecardPage() {
 
   const currentPlayer = match.scores.find(s => s.playerId === selectedPlayerId);
   const sortedHoles = [...match.course.holes].sort((a, b) => a.holeNumber - b.holeNumber);
+  const holePars = sortedHoles.map(h => h.par);
   const currentHoleData = sortedHoles[currentHole - 1];
   const isReadonly = match.status === 'Completed';
 
@@ -536,6 +537,7 @@ export function ScorecardPage() {
                 <HoleSelector
                   currentHole={currentHole}
                   holeScores={currentPlayer.holeScores}
+                  holePars={holePars}
                   onSelectHole={setCurrentHole}
                 />
                 <ScoreInput
@@ -559,6 +561,7 @@ export function ScorecardPage() {
                 <HoleSelector
                   currentHole={currentHole}
                   holeScores={currentPlayer.holeScores}
+                  holePars={holePars}
                   onSelectHole={setCurrentHole}
                 />
                 <ScoreInput

@@ -645,9 +645,404 @@ public (bool isOff, bool isRedemption) EvaluateHole(
 - [ ] Tournament leaderboard
 
 ### Phase 6: Round Robins & Grand Totals (Weeks 15–16)
-- [ ] Round Robin generators (Foursome, Individual, Best Ball)
-- [ ] Grand Totals aggregation with toggleable bet inclusion
-- [ ] Print/export views (PDF generation via Azure)
+
+#### 6.1 Round Robin Generators
+
+A Round Robin is an automated bet structure where every participant/team plays every other participant/team. The Excel workbook uses VBA macros to compute all pairwise matchups. The web app must implement this server-side in the calculation engine.
+
+**Foursome Round Robin:**
+- **Structure**: Every team plays every other team in a separate Foursome Nassau.
+- **Input**: N teams (2–15), each with 4 players, Nassau amounts, handicap %, and investment bet config.
+- **Computation**: Generate all `C(N,2)` pairwise combinations (e.g., 6 teams = 15 matchups).
+- **Per Matchup**: Calculate Foursome Nassau + investments (offs/redemptions) for each pair.
+- **Output**: Results matrix showing every team-vs-team outcome (Nassau front/back/18, investments, net W/L).
+- **Database**: Create `RoundRobinResults` table linking `BetConfigId` → list of `BetResult` rows (one per matchup).
+
+**Individual Round Robin:**
+- **Structure**: Every player plays every other player in a 1v1 match (Match Play or Medal Play).
+- **Input**: N players (2–50+), Nassau amounts, press config.
+- **Computation**: Generate all `C(N,2)` pairwise matchups.
+- **Per Matchup**: Calculate 1v1 Nassau + auto-presses for each pair.
+- **Output**: Results matrix (hole-by-hole, press tallies, final W/L per player).
+- **Database**: `RoundRobinResults` rows for each matchup.
+
+**Best Ball Round Robin:**
+- **Structure**: Every 2-man team plays every other 2-man team in a Best Ball Nassau.
+- **Input**: N teams (formed by pairing players; 2–23 teams), Nassau amounts, match/medal play.
+- **Computation**: Generate all `C(N,2)` 2v2 matchups.
+- **Per Matchup**: Calculate Best Ball Nassau for each team pairing.
+- **Output**: Results matrix showing every team-vs-team outcome.
+- **Database**: `RoundRobinResults` rows per matchup.
+
+**Backend Implementation (C# Calculation Engine):**
+
+```csharp
+namespace GolfMatchPro.Engine.RoundRobin
+{
+    public interface IRoundRobinCalculator
+    {
+        /// Generates all pairwise matchups and computes results.
+        /// Returns aggregated matchup results + overall leaderboard.
+        RoundRobinResult CalculateFoursomeRoundRobin(
+            List<TeamData> teams,
+            FoursomeConfig config);
+
+        RoundRobinResult CalculateIndividualRoundRobin(
+            List<PlayerScoreData> players,
+            IndividualConfig config);
+
+        RoundRobinResult CalculateBestBallRoundRobin(
+            List<TeamPair> teams,
+            BestBallConfig config);
+    }
+
+    public class RoundRobinResult
+    {
+        public List<MatchupResult> Matchups { get; set; }     // Per pair results
+        public Dictionary<int, decimal> PlayerWinLoss { get; set; }  // Aggregate per player/team
+        public List<LeaderboardEntry> Leaderboard { get; set; }      // Ranked standings
+    }
+
+    public class MatchupResult
+    {
+        public int Matchup { get; set; }                    // 1-based matchup number
+        public int EntityAId { get; set; }                  // Team/Player A ID
+        public int EntityBId { get; set; }                  // Team/Player B ID
+        public decimal EntityAWinLoss { get; set; }         // Positive = A wins
+        public decimal EntityBWinLoss { get; set; }         // Positive = B wins
+        public string ResultDetails { get; set; }           // JSON: hole-by-hole breakdown
+    }
+
+    public class LeaderboardEntry
+    {
+        public int EntityId { get; set; }
+        public string EntityName { get; set; }
+        public decimal TotalWinLoss { get; set; }
+        public int Rank { get; set; }
+        public int MatchupsPlayed { get; set; }
+    }
+}
+```
+
+**Algorithm Outline:**
+
+```csharp
+public RoundRobinResult CalculateFoursomeRoundRobin(
+    List<TeamData> teams,
+    FoursomeConfig config)
+{
+    var matchups = new List<MatchupResult>();
+    var result = new RoundRobinResult();
+
+    // Generate all C(n,2) pairs
+    for (int i = 0; i < teams.Count - 1; i++)
+    {
+        for (int j = i + 1; j < teams.Count; j++)
+        {
+            var teamA = teams[i];
+            var teamB = teams[j];
+
+            // Compute Foursome Nassau for this matchup
+            var nassauResult = _nassauCalculator.CalculateMedalPlay(
+                teamA.HoleScores, teamB.HoleScores);
+
+            // Compute investments (offs/redemptions)
+            var investmentResult = _investmentCalculator.Calculate(
+                teamA, teamB, config);
+
+            // Aggregate into matchup result
+            matchups.Add(new MatchupResult
+            {
+                Matchup = matchups.Count + 1,
+                EntityAId = teamA.Id,
+                EntityBId = teamB.Id,
+                EntityAWinLoss = nassauResult.TeamATotal + investmentResult.TeamATotal,
+                EntityBWinLoss = nassauResult.TeamBTotal + investmentResult.TeamBTotal,
+                ResultDetails = SerializeDetails(...)
+            });
+        }
+    }
+
+    // Aggregate leaderboard
+    var leaderboard = teams
+        .Select(t => new LeaderboardEntry
+        {
+            EntityId = t.Id,
+            EntityName = t.TeamName,
+            TotalWinLoss = matchups
+                .Where(m => m.EntityAId == t.Id)
+                .Sum(m => m.EntityAWinLoss) +
+                matchups
+                .Where(m => m.EntityBId == t.Id)
+                .Sum(m => m.EntityBWinLoss),
+            MatchupsPlayed = matchups.Count(m => m.EntityAId == t.Id || m.EntityBId == t.Id)
+        })
+        .OrderByDescending(e => e.TotalWinLoss)
+        .Select((e, idx) => { e.Rank = idx + 1; return e; })
+        .ToList();
+
+    result.Matchups = matchups;
+    result.Leaderboard = leaderboard;
+    result.PlayerWinLoss = leaderboard.ToDictionary(e => e.EntityId, e => e.TotalWinLoss);
+
+    return result;
+}
+```
+
+#### 6.2 Grand Totals Aggregation
+
+Grand Totals combine all active bets from a match and show each player's net aggregate W/L across:
+- Foursomes, Threesomes, Fivesomes (team bets)
+- Individual 1v1 bets
+- Best Ball (2v2) bets
+- Best Ball Round Robin
+- Skins (gross and/or net)
+- Individual Tournament
+- Individual Round Robin
+- Foursome Round Robin
+
+**Database:**
+
+```
+GrandTotals
+├── GrandTotalId (PK)
+├── MatchId (FK)
+├── PlayerId (FK)
+├── IncludeFoursomes (bool)
+├── IncludeThreesomes (bool)
+├── IncludeFivesomes (bool)
+├── IncludeIndividual (bool)
+├── IncludeBestBall (bool)
+├── IncludeSkinsGross (bool)
+├── IncludeSkinsNet (bool)
+├── IncludeIndoTourney (bool)
+├── IncludeRoundRobins (bool)
+├── TotalWinLoss (decimal, computed)
+├── DetailJson (NVARCHAR(MAX))
+└── LastUpdated (DateTime)
+```
+
+**Backend Implementation:**
+
+```csharp
+namespace GolfMatchPro.Engine
+{
+    public interface IGrandTotalCalculator
+    {
+        /// Compute grand total for a single player.
+        /// includedBets dict controls which bet types are included.
+        PlayerGrandTotal Calculate(
+            int matchId,
+            int playerId,
+            Dictionary<string, bool> includedBets);
+
+        /// Compute all grand totals for a match.
+        List<PlayerGrandTotal> CalculateAllPlayers(
+            int matchId,
+            Dictionary<string, bool> includedBets);
+    }
+
+    public class PlayerGrandTotal
+    {
+        public int PlayerId { get; set; }
+        public string PlayerName { get; set; }
+
+        // Per-bet-type breakdown
+        public decimal FoursomesWinLoss { get; set; }
+        public decimal ThreesomesWinLoss { get; set; }
+        public decimal FivesomesWinLoss { get; set; }
+        public decimal IndividualWinLoss { get; set; }
+        public decimal BestBallWinLoss { get; set; }
+        public decimal SkinsGrossWinLoss { get; set; }
+        public decimal SkinsNetWinLoss { get; set; }
+        public decimal IndoTourneyWinLoss { get; set; }
+        public decimal RoundRobinWinLoss { get; set; }
+
+        // Aggregate
+        public decimal TotalWinLoss { get; set; }
+        public string Status { get; set; } // "Win", "Loss", "Break Even"
+    }
+}
+```
+
+**Algorithm:**
+
+```csharp
+public PlayerGrandTotal Calculate(
+    int matchId,
+    int playerId,
+    Dictionary<string, bool> includedBets)
+{
+    var result = new PlayerGrandTotal
+    {
+        PlayerId = playerId,
+        PlayerName = _playerService.GetPlayerName(playerId)
+    };
+
+    decimal grandTotal = 0m;
+
+    // Foursomes
+    if (includedBets["Foursomes"])
+    {
+        var foursomeWL = _betResultsRepository
+            .Where(br => br.BetConfig.BetType == BetType.Foursome && br.PlayerId == playerId)
+            .Sum(br => br.WinLossAmount);
+        result.FoursomesWinLoss = foursomeWL;
+        grandTotal += foursomeWL;
+    }
+
+    // Threesomes, Fivesomes (similar)
+    if (includedBets["Threesomes"])
+    {
+        var threeWL = _betResultsRepository
+            .Where(br => br.BetConfig.BetType == BetType.Threesome && br.PlayerId == playerId)
+            .Sum(br => br.WinLossAmount);
+        result.ThreesomesWinLoss = threeWL;
+        grandTotal += threeWL;
+    }
+
+    // Individual bets (includes presses)
+    if (includedBets["Individual"])
+    {
+        var indivWL = _betResultsRepository
+            .Where(br => br.BetConfig.BetType == BetType.Individual && br.PlayerId == playerId)
+            .Sum(br => br.WinLossAmount + (br.PressResult ?? 0m));
+        result.IndividualWinLoss = indivWL;
+        grandTotal += indivWL;
+    }
+
+    // Best Ball
+    if (includedBets["BestBall"])
+    {
+        var bbWL = _betResultsRepository
+            .Where(br => br.BetConfig.BetType == BetType.BestBall && br.PlayerId == playerId)
+            .Sum(br => br.WinLossAmount);
+        result.BestBallWinLoss = bbWL;
+        grandTotal += bbWL;
+    }
+
+    // Skins (gross)
+    if (includedBets["SkinsGross"])
+    {
+        var skinsWL = _betResultsRepository
+            .Where(br => br.BetConfig.BetType == BetType.Skins && br.PlayerId == playerId)
+            .Sum(br => br.SkinsAmount ?? 0m);
+        result.SkinsGrossWinLoss = skinsWL;
+        grandTotal += skinsWL;
+    }
+
+    // Indo Tournament
+    if (includedBets["Tournament"])
+    {
+        var tourneyWL = _betResultsRepository
+            .Where(br => br.BetConfig.BetType == BetType.Tournament && br.PlayerId == playerId)
+            .Sum(br => br.WinLossAmount);
+        result.IndoTourneyWinLoss = tourneyWL;
+        grandTotal += tourneyWL;
+    }
+
+    result.TotalWinLoss = grandTotal;
+    result.Status = grandTotal > 0 ? "Win" : grandTotal < 0 ? "Loss" : "Break Even";
+
+    return result;
+}
+```
+
+#### 6.3 Print/Export Views
+
+Provide formatted, print-optimized views of scorecards, results, and grand totals. Optionally generate PDF files via Azure services (e.g., Azure Report Server or a third-party PDF generator like SelectPdf or iTextSharp).
+
+**React UI Components:**
+
+```
+/matches/:id/print
+  └── <PrintDashboard />
+      ├── <PrintScorecard /> (Players-Scores sheet replica)
+      ├── <PrintBetResults /> (Results by bet type)
+      ├── <PrintGrandTotals /> (Summary table)
+      ├── <PrintSkins /> (Skins results with hole mapping)
+      ├── <PrintTournament /> (Tournament leaderboard)
+      └── <ExportToPDF /> (Download as PDF)
+```
+
+**ASP.NET Core Endpoints:**
+
+```
+GET /api/matches/{matchId}/export/scorecard    → PDF of scorecard
+GET /api/matches/{matchId}/export/results      → PDF of all bet results
+GET /api/matches/{matchId}/export/grand-totals → PDF of grand totals
+GET /api/matches/{matchId}/export/full-report  → Comprehensive PDF (all pages)
+```
+
+**Implementation Notes:**
+
+- Use **HtmlRenderingCore** + **SelectPdf** or **iText 7** for server-side PDF generation.
+- Alternatively, generate HTML formatted for print (media query `@media print`) and let browser handle PDF export.
+- Include course info, player list, hole-by-hole scores, and all bet results in exports.
+- Store exported PDFs in **Azure Blob Storage** for archival and download.
+
+**Example PDF Structure:**
+
+```
+Page 1: Scorecard (Players-Scores equivalent)
+├── Course name, par, handicap ranking
+├── Per-player rows: name, handicap, hole-by-hole scores, front/back/total, net
+
+Page 2: Bet Results Summary
+├── Foursomes results (team-vs-team matrix)
+├── Individual results (1v1 matchups with presses)
+├── Best Ball results (Sheet Hanger vs opponents)
+
+Page 3: Grand Totals
+├── Per-player aggregate W/L across all bet types
+├── Final standings
+
+Page 4+: Detailed Bet Results
+├── Per-bet type: hole-by-hole breakdown, team scores, investment offs/redemptions
+```
+
+---
+
+#### 6.4 Task Breakdown for Phase 6
+
+**Backend (ASP.NET Core + Calculation Engine):**
+
+- [ ] Create `RoundRobinCalculator` service interface + implementations for Foursome/Individual/BestBall
+- [ ] Implement `C(n,2)` pairwise generation algorithm
+- [ ] Implement per-matchup calculation logic (reuse Nassau/Individual/BestBall calculators)
+- [ ] Aggregate results into leaderboard rankings
+- [ ] Create `GrandTotalCalculator` service for bet-type aggregation
+- [ ] Implement toggleable bet inclusion logic
+- [ ] Create `RoundRobinResults` and `GrandTotals` EF Core entities + migrations
+- [ ] Add API endpoints:
+  - `POST /api/matches/{matchId}/bets/{betConfigId}/round-robin/calculate`
+  - `GET /api/matches/{matchId}/round-robin/{roundRobinId}/results`
+  - `GET /api/matches/{matchId}/grand-totals`
+  - `GET /api/matches/{matchId}/grand-totals/by-bet-type`
+
+**Frontend (React + TypeScript):**
+
+- [ ] Create `RoundRobinSetupPage` component with toggles for bet type inclusion
+- [ ] Create `RoundRobinResultsPage` component displaying matchup grid + leaderboard
+- [ ] Create `GrandTotalsPage` component with per-player aggregate W/L + toggles
+- [ ] Create `PrintDashboard` component aggregating all views
+- [ ] Add navigation from `/matches/:id/results` to round-robin and grand-totals sub-pages
+- [ ] Implement client-side bet toggle state (Zustand store)
+- [ ] Add print/export button triggering PDF generation
+
+**Testing (xUnit):**
+
+- [ ] Unit tests for `RoundRobinCalculator` (verify all pairwise pairs are generated, no duplicates)
+- [ ] Unit tests for grand total aggregation (verify correct summation across all bet types)
+- [ ] Integration tests for API round-robin endpoints
+- [ ] E2E tests for round robin setup → results flow
+
+**Documentation & Export:**
+
+- [ ] Implement HTML-to-PDF export using SelectPdf or iText 7
+- [ ] Upload exported PDFs to Azure Blob Storage
+- [ ] Add download link on print dashboard
+- [ ] Document PDF schema and formatting standards
 
 ### Phase 7: Polish & Advanced Features (Weeks 17–20)
 - [ ] Offline support (service worker + IndexedDB)

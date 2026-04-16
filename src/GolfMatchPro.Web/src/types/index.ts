@@ -399,3 +399,53 @@ export interface TournamentResultsDto {
   netBack9: TournamentDivisionResultDto;
   leaderboard: TournamentLeaderboardEntryDto[];
 }
+
+// Round robin types
+export interface MatchupResultDto {
+  matchup: number;
+  entityAId: number;
+  entityAName: string;
+  entityBId: number;
+  entityBName: string;
+  entityAWinLoss: number;
+  entityBWinLoss: number;
+  resultDetails: string | null;
+}
+
+export interface LeaderboardEntryDto {
+  entityId: number;
+  entityName: string;
+  totalWinLoss: number;
+  rank: number;
+  matchupsPlayed: number;
+}
+
+export interface RoundRobinResultDto {
+  roundRobinId: number;
+  matchId: number;
+  betConfigId: number;
+  matchups: MatchupResultDto[];
+  leaderboard: LeaderboardEntryDto[];
+}
+
+// Grand totals types
+export interface PlayerGrandTotalDto {
+  playerId: number;
+  playerName: string;
+  foursomesWinLoss: number;
+  threesomesWinLoss: number;
+  fivesomesWinLoss: number;
+  individualWinLoss: number;
+  bestBallWinLoss: number;
+  skinsGrossWinLoss: number;
+  skinsNetWinLoss: number;
+  indoTourneyWinLoss: number;
+  roundRobinWinLoss: number;
+  totalWinLoss: number;
+  status: string;
+}
+
+export interface GrandTotalsDto {
+  matchId: number;
+  playerTotals: PlayerGrandTotalDto[];
+}

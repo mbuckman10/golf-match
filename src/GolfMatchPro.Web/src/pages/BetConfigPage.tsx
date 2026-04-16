@@ -142,12 +142,12 @@ const useStyles = makeStyles({
     fontWeight: '600',
     ':hover': {
       backgroundColor: 'var(--golf-green-100)',
-      borderColor: 'var(--golf-green-600)',
+      border: '1px solid var(--golf-green-600)',
       color: 'var(--golf-green-800)',
     },
     ':active': {
       backgroundColor: 'var(--golf-green-200)',
-      borderColor: 'var(--golf-green-700)',
+      border: '1px solid var(--golf-green-700)',
       color: 'var(--golf-green-800)',
     },
   },
@@ -168,13 +168,13 @@ const useStyles = makeStyles({
     fontWeight: '600',
     ':hover': {
       backgroundColor: 'var(--golf-green-100)',
-      borderColor: 'var(--golf-green-700)',
+      border: '1px solid var(--golf-green-700)',
       color: 'var(--golf-green-800)',
       boxShadow: 'inset 0 0 0 1px rgba(43,130,80,0.32)',
     },
     ':active': {
       backgroundColor: 'var(--golf-green-200)',
-      borderColor: 'var(--golf-green-800)',
+      border: '1px solid var(--golf-green-800)',
       color: 'var(--golf-green-900)',
       boxShadow: 'inset 0 0 0 1px rgba(43,130,80,0.4)',
     },
@@ -885,7 +885,7 @@ export function BetConfigPage() {
                       >
                         <Option value="0">Select player...</Option>
                         {match.scores.map((s) => (
-                          <Option key={s.playerId} value={String(s.playerId)}>
+                          <Option key={s.playerId} value={String(s.playerId)} text={`${s.playerName} (CH: ${s.courseHandicap})`}>
                             {s.playerName} (CH: {s.courseHandicap})
                           </Option>
                         ))}

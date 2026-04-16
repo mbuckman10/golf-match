@@ -57,3 +57,5 @@ secrets.json
 
 # Publish output
 publish/
+
+.fake

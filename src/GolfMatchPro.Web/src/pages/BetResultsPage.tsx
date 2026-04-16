@@ -55,6 +55,7 @@ export function BetResultsPage() {
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const [m, b, r] = await Promise.all([
         matchService.getById(matchId),
@@ -64,8 +65,12 @@ export function BetResultsPage() {
       setMatch(m);
       setBet(b);
       setResults(r);
-    } catch {
-      setError('Failed to load results');
+    } catch (e: any) {
+      const apiMessage = e?.response?.data;
+      const detail = typeof apiMessage === 'string'
+        ? apiMessage
+        : apiMessage?.error ?? e?.message;
+      setError(detail ? `Failed to load results: ${detail}` : 'Failed to load results');
     } finally {
       setLoading(false);
     }
@@ -91,7 +96,27 @@ export function BetResultsPage() {
   const fmtColor = (n: number) => (n > 0 ? 'var(--golf-success)' : n < 0 ? 'var(--golf-danger)' : undefined);
 
   if (loading) return <Spinner label="Loading results..." />;
-  if (!match || !bet || !results) return <Body1>Not found</Body1>;
+  if (!match || !bet) return <Body1>Not found</Body1>;
+
+  if (!results) {
+    return (
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: tokens.spacingVerticalL }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalM, marginBottom: tokens.spacingVerticalL }}>
+          <Button icon={<ArrowLeft24Regular />} appearance="subtle" onClick={() => navigate(`/matches/${matchId}/bets`)} />
+          <Title2>Results</Title2>
+        </div>
+
+        <MessageBar intent="error" style={{ marginBottom: tokens.spacingVerticalM }}>
+          <MessageBarBody>{error ?? 'No results are available for this bet yet.'}</MessageBarBody>
+        </MessageBar>
+
+        <div style={{ display: 'flex', gap: tokens.spacingHorizontalM }}>
+          <Button appearance="primary" onClick={loadData}>Retry</Button>
+          <Button onClick={() => navigate(`/matches/${matchId}/bets`)}>Back to Bets</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: 1000, margin: '0 auto', padding: tokens.spacingVerticalL }}>

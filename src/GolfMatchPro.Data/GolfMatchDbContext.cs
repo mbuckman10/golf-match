@@ -16,6 +16,8 @@ public class GolfMatchDbContext : DbContext
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<TeamPlayer> TeamPlayers => Set<TeamPlayer>();
     public DbSet<BetResult> BetResults => Set<BetResult>();
+    public DbSet<RoundRobinResult> RoundRobinResults => Set<RoundRobinResult>();
+    public DbSet<GrandTotal> GrandTotals => Set<GrandTotal>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -154,6 +156,40 @@ public class GolfMatchDbContext : DbContext
             e.Property(r => r.TotalStrokesResult).HasPrecision(10, 2);
             e.Property(r => r.SkinsAmount).HasPrecision(10, 2);
             e.Property(r => r.PressResult).HasPrecision(10, 2);
+        });
+
+        // RoundRobinResult
+        modelBuilder.Entity<RoundRobinResult>(e =>
+        {
+            e.HasKey(r => r.RoundRobinResultId);
+            e.HasOne(r => r.Match)
+                .WithMany()
+                .HasForeignKey(r => r.MatchId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(r => r.BetConfiguration)
+                .WithMany()
+                .HasForeignKey(r => r.BetConfigId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.Property(r => r.RoundRobinType).HasMaxLength(30);
+            e.Property(r => r.MatchupsJson).HasColumnType("nvarchar(max)");
+            e.Property(r => r.LeaderboardJson).HasColumnType("nvarchar(max)");
+            e.HasIndex(r => new { r.MatchId, r.BetConfigId, r.RoundRobinType });
+        });
+
+        // GrandTotal
+        modelBuilder.Entity<GrandTotal>(e =>
+        {
+            e.HasKey(g => g.GrandTotalId);
+            e.HasOne(g => g.Match)
+                .WithMany()
+                .HasForeignKey(g => g.MatchId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(g => g.Player)
+                .WithMany()
+                .HasForeignKey(g => g.PlayerId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.Property(g => g.TotalWinLoss).HasPrecision(10, 2);
+            e.HasIndex(g => new { g.MatchId, g.PlayerId }).IsUnique();
         });
     }
 }

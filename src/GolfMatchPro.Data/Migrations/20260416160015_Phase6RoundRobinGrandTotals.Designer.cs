@@ -4,6 +4,7 @@ using GolfMatchPro.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GolfMatchPro.Data.Migrations
 {
     [DbContext(typeof(GolfMatchDbContext))]
-    partial class GolfMatchDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260416160015_Phase6RoundRobinGrandTotals")]
+    partial class Phase6RoundRobinGrandTotals
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -610,7 +613,7 @@ namespace GolfMatchPro.Data.Migrations
                     b.HasOne("GolfMatchPro.Data.Entities.Match", "Match")
                         .WithMany()
                         .HasForeignKey("MatchId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("GolfMatchPro.Data.Entities.Player", "Player")
@@ -673,7 +676,7 @@ namespace GolfMatchPro.Data.Migrations
                     b.HasOne("GolfMatchPro.Data.Entities.Match", "Match")
                         .WithMany()
                         .HasForeignKey("MatchId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("BetConfiguration");

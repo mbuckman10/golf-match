@@ -1,9 +1,12 @@
 using GolfMatchPro.Api.Hubs;
 using GolfMatchPro.Data;
 using GolfMatchPro.Engine.BestBall;
+using GolfMatchPro.Engine.GrandTotals;
 using GolfMatchPro.Engine.Handicaps;
 using GolfMatchPro.Engine.Individual;
+using GolfMatchPro.Engine.Investments;
 using GolfMatchPro.Engine.Nassau;
+using GolfMatchPro.Engine.RoundRobin;
 using GolfMatchPro.Engine.Skins;
 using GolfMatchPro.Engine.Teams;
 using GolfMatchPro.Engine.Tournament;
@@ -31,6 +34,8 @@ builder.Services.AddSingleton<IIndividualBetCalculator, IndividualBetCalculator>
 builder.Services.AddSingleton<IBestBallCalculator, BestBallCalculator>();
 builder.Services.AddSingleton<ISkinsCalculator, SkinsCalculator>();
 builder.Services.AddSingleton<ITournamentCalculator, TournamentCalculator>();
+builder.Services.AddSingleton<IRoundRobinCalculator, RoundRobinCalculator>();
+builder.Services.AddSingleton<IGrandTotalCalculator, GrandTotalCalculator>();
 
 // SignalR
 builder.Services.AddSignalR();

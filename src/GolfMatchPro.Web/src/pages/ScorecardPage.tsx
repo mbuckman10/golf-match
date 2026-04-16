@@ -49,6 +49,7 @@ const useStyles = makeStyles({
   mobileView: {
     display: 'flex',
     flexDirection: 'column',
+    alignItems: 'center',
     gap: '8px',
     '@media (min-width: 960px)': {
       display: 'none',
@@ -57,7 +58,10 @@ const useStyles = makeStyles({
   desktopView: {
     display: 'none',
     '@media (min-width: 960px)': {
-      display: 'block',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '8px',
     },
   },
   playerSelect: {

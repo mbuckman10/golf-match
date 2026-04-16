@@ -30,10 +30,9 @@ const useStyles = makeStyles({
     minWidth: '80px',
     textAlign: 'center',
   },
-  birdie: { color: tokens.colorPaletteRedForeground1 },
-  par: { color: tokens.colorNeutralForeground1 },
-  bogey: { color: tokens.colorPaletteBlueForeground2 },
-  doublePlus: { color: tokens.colorPaletteDarkOrangeForeground1 },
+  underPar: { color: tokens.colorPaletteGreenForeground1 },
+  par: { color: tokens.colorPaletteBlueForeground2 },
+  overPar: { color: tokens.colorPaletteRedForeground1 },
 });
 
 interface ScoreInputProps {
@@ -60,10 +59,9 @@ export function ScoreInput({
   const score = currentScore || par;
   const diff = score - par;
   const scoreColorClass =
-    diff <= -1 ? styles.birdie :
+    diff <= -1 ? styles.underPar :
     diff === 0 ? styles.par :
-    diff === 1 ? styles.bogey :
-    styles.doublePlus;
+    styles.overPar;
 
   return (
     <div className={styles.root}>

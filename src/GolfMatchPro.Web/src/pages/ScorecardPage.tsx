@@ -110,10 +110,6 @@ export function ScorecardPage() {
     try {
       await matchService.updateHoleScore(matchId, selectedPlayerId, currentHole, score);
       await loadMatch();
-      // Auto-advance to next hole
-      if (currentHole < 18) {
-        setCurrentHole(prev => prev + 1);
-      }
     } catch (err) {
       console.error('Failed to save score', err);
     } finally {

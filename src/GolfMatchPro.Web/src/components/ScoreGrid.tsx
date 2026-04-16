@@ -33,9 +33,9 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground2,
     fontWeight: 'bold',
   },
-  birdie: { color: tokens.colorPaletteRedForeground1, fontWeight: 'bold' },
-  bogey: { color: tokens.colorPaletteBlueForeground2 },
-  doublePlus: { color: tokens.colorPaletteDarkOrangeForeground1, fontWeight: 'bold' },
+  underPar: { color: tokens.colorPaletteGreenForeground1, fontWeight: 'bold' },
+  par: { color: tokens.colorPaletteBlueForeground2 },
+  overPar: { color: tokens.colorPaletteRedForeground1, fontWeight: 'bold' },
 });
 
 interface ScoreGridProps {
@@ -53,9 +53,9 @@ export function ScoreGrid({ scores, holes }: ScoreGridProps) {
   const getScoreClass = (score: number, par: number) => {
     if (score === 0) return '';
     const diff = score - par;
-    if (diff <= -1) return styles.birdie;
-    if (diff === 1) return styles.bogey;
-    if (diff >= 2) return styles.doublePlus;
+    if (diff <= -1) return styles.underPar;
+    if (diff === 0) return styles.par;
+    if (diff >= 1) return styles.overPar;
     return '';
   };
 

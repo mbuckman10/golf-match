@@ -45,6 +45,12 @@ const useStyles = makeStyles({
     gap: '12px',
     alignItems: 'center',
   },
+  statusBadge: {
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
+    display: 'inline-flex',
+    alignItems: 'center',
+  },
 });
 
 const statusColor: Record<MatchStatus, 'success' | 'warning' | 'informative'> = {
@@ -105,6 +111,7 @@ export function MatchDashboardPage() {
                 description={<Caption1>{match.matchDate}</Caption1>}
                 action={
                   <Badge
+                    className={styles.statusBadge}
                     appearance="filled"
                     color={statusColor[match.status]}
                   >
